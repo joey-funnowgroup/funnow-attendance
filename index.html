@@ -731,7 +731,7 @@ document.getElementById("f-mode").addEventListener("change",e=>{ fMode=e.target.
 document.getElementById("f-clr").addEventListener("click",()=>{ fFrom=fTo=fMode=""; document.getElementById("f-from").value=""; document.getElementById("f-to").value=""; document.getElementById("f-mode").value=""; renderHistTable(); });
 
 // Admin login
-document.getElementById("al-back").addEventListener("click",()=>show("v-home"));
+document.getElementById("al-back").addEventListener("click",()=>show("v-login"));
 document.getElementById("al-enter").addEventListener("click",()=>{
   const pwd=document.getElementById("al-pwd").value;
   if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); }
