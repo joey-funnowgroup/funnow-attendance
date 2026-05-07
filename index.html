@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUNNOW Group — Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --or:#FF5537;--or-h:#E8402A;--or-lt:#FFF1EE;
+  --bk:#252729;--bk2:#1A1C1E;
+  --gy:#C1C1C2;--gy-lt:#F5F5F5;--gy-md:#E8E8E8;
+  --ok:#16A34A;--ok-lt:#DCFCE7;
+  --wn:#D97706;--wn-lt:#FEF3C7;
+  --pu:#6366F1;--pu-lt:#EEF2FF;
+  --rd:#DC2626;
+}
+*{font-family:"DM Sans",-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:var(--bk)}
+body{background:var(--gy-lt);min-height:100vh}
+.hf{font-family:"Outfit",sans-serif}
+.view{display:none;min-height:100vh}
+
+/* NAV */
+.nav{height:56px;background:var(--bk2);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,.06)}
+.nav-brand{display:flex;align-items:center;gap:6px}
+.nav-fn{font-family:"Outfit",sans-serif;font-weight:900;font-size:16px;color:#fff;letter-spacing:-.3px}
+.nav-gr{font-family:"Outfit",sans-serif;font-weight:400;font-size:16px;color:rgba(255,255,255,.55);letter-spacing:-.1px}
+.nav-sep{color:rgba(255,255,255,.2);margin:0 8px;font-size:13px}
+.nav-pg{color:var(--gy);font-size:13px}
+.nav-r{display:flex;align-items:center;gap:10px}
+.nav-av{width:30px;height:30px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Outfit",sans-serif;font-weight:800;font-size:11px;color:#fff}
+.nav-nm{color:rgba(255,255,255,.5);font-size:13px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gb{padding:7px 15px;border-radius:7px;font-size:12px;font-family:"Outfit",sans-serif;font-weight:700;cursor:pointer;transition:all .15s;border:none;letter-spacing:.2px}
+.gb-ol{background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.65)}
+.gb-ol:hover{border-color:rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.07)}
+.gb-or{background:var(--or);color:#fff}
+.gb-or:hover{background:var(--or-h)}
+
+/* LOGIN SPLIT */
+#v-login,#v-admin-login{display:flex;min-height:100vh}
+.l-left{flex:1;background:var(--or);display:flex;flex-direction:column;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
+.l-left.dk{background:var(--bk2)}
+.l-left::before{content:"";position:absolute;right:-80px;bottom:-80px;width:320px;height:320px;background:rgba(0,0,0,.12);border-radius:50%}
+.l-left::after{content:"";position:absolute;left:-50px;top:-50px;width:220px;height:220px;background:rgba(255,255,255,.07);border-radius:50%}
+.lc{position:relative;z-index:1}
+.ll-brand{margin-bottom:48px}
+.ll-fn{font-family:"Outfit",sans-serif;font-weight:900;font-size:22px;color:#fff;letter-spacing:-.5px}
+.ll-gr{font-family:"Outfit",sans-serif;font-weight:400;font-size:22px;color:rgba(255,255,255,.55);letter-spacing:-.2px}
+.l-h{color:#fff;font-family:"Outfit",sans-serif;font-weight:900;font-size:40px;line-height:1.05;letter-spacing:-1.5px;margin-bottom:16px}
+.l-h span{color:rgba(255,255,255,.45)}
+.l-p{color:rgba(255,255,255,.72);font-size:14px;line-height:1.75;max-width:300px}
+.l-right{width:460px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:64px 52px}
+.l-tag{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--or);margin-bottom:10px}
+.l-title{font-family:"Outfit",sans-serif;font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}
+.l-sub{font-size:13px;color:#999;line-height:1.7;margin-bottom:28px}
+.fl{display:block;font-weight:600;font-size:13px;margin-bottom:7px}
+.fi{width:100%;padding:12px 15px;border:1.5px solid var(--gy-md);border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+.fi:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,85,55,.1)}
+.fe{font-size:12px;color:var(--rd);margin-top:5px;min-height:16px}
+.pb{width:100%;padding:13px;background:var(--or);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;font-family:"Outfit",sans-serif;cursor:pointer;transition:background .2s,transform .1s;margin-top:16px;letter-spacing:.2px}
+.pb:hover{background:var(--or-h)}
+.pb:active{transform:scale(.98)}
+.pb.dk-btn{background:var(--bk)}
+.pb.dk-btn:hover{opacity:.85}
+.divd{display:flex;align-items:center;gap:12px;margin:20px 0}
+.divd::before,.divd::after{content:"";flex:1;height:1px;background:var(--gy-md)}
+.divd span{font-size:12px;color:#bbb;font-weight:600;white-space:nowrap}
+.info-b{margin-top:14px;padding:11px 14px;background:var(--gy-lt);border-radius:8px;font-size:12px;color:#999;line-height:1.65;border-left:3px solid var(--gy-md)}
+.info-b strong{color:var(--bk)}
+.back-lnk{background:none;border:none;color:var(--or);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;padding:0;margin-bottom:20px;display:inline-block}
+
+/* HOME */
+#v-home{display:none}
+.home-body{display:grid;grid-template-columns:300px 1fr;gap:20px;max-width:1140px;margin:0 auto;padding:28px 24px 60px}
+
+/* LEFT PANEL */
+.lp{display:flex;flex-direction:column;gap:14px}
+.clock-card{background:var(--bk2);border-radius:18px;padding:26px;position:relative;overflow:hidden}
+.clock-card::before{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:var(--or);border-radius:50%;opacity:.09}
+.ci{position:relative;z-index:1}
+.c-lbl{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:rgba(193,193,194,.6);margin-bottom:4px}
+.c-time{font-family:"Outfit",sans-serif;font-size:50px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1}
+.c-date{color:rgba(255,255,255,.4);font-size:12px;margin-top:6px}
+.sc{background:#fff;border-radius:14px;padding:18px 20px;border:1px solid rgba(0,0,0,.05)}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#bbb;margin-bottom:12px}
+.uc-row{display:flex;align-items:center;gap:12px}
+.uc-av{width:38px;height:38px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:"Outfit",sans-serif;font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+.uc-ph{width:38px;height:38px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.uc-name{font-family:"Outfit",sans-serif;font-weight:800;font-size:14px;letter-spacing:-.3px}
+.uc-email{font-size:11px;color:#999;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px}
+.mc-btns{display:flex;flex-direction:column;gap:7px}
+.mc-btn{padding:10px 14px;border-radius:9px;border:1.5px solid var(--gy-md);background:#fff;color:#aaa;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s;text-align:left}
+.mc-btn.active{border-color:var(--or);background:var(--or-lt);color:var(--or)}
+.mc-btn:hover:not(.active){border-color:#ccc;color:var(--bk)}
+.ac-btns{display:flex;flex-direction:column;gap:9px}
+.ac-btn{width:100%;padding:15px;border-radius:11px;border:none;font-family:"Outfit",sans-serif;font-size:16px;font-weight:900;cursor:pointer;transition:all .18s;letter-spacing:-.2px}
+.ac-in{background:var(--or);color:#fff}
+.ac-in:hover{background:var(--or-h);transform:translateY(-1px)}
+.ac-out{background:var(--bk);color:#fff}
+.ac-out:hover{opacity:.85;transform:translateY(-1px)}
+.ac-dis{background:var(--gy-md);color:#bbb;cursor:not-allowed}
+.ac-note{font-size:11px;color:#bbb;text-align:center;margin-top:8px;font-weight:600}
+.td-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.td-item{background:var(--gy-lt);border-radius:9px;padding:12px}
+.td-lbl{font-size:10px;color:#bbb;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.td-val{font-family:"Outfit",sans-serif;font-size:17px;font-weight:800;line-height:1.1}
+
+/* RIGHT PANEL */
+.rp-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.rp-title{font-family:"Outfit",sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px}
+.rp-sub{font-size:12px;color:#bbb;margin-top:2px}
+.exp-btn{background:var(--or);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:"Outfit",sans-serif;font-size:12px;font-weight:800;transition:background .2s}
+.exp-btn:hover{background:var(--or-h)}
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.fi2{padding:8px 12px;border-radius:8px;border:1.5px solid var(--gy-md);font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;background:#fff;color:var(--bk)}
+.fi2:focus{border-color:var(--or)}
+.clr-btn{background:none;border:1.5px solid var(--gy-md);padding:7px 13px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;color:#888;transition:all .15s}
+.clr-btn:hover{background:var(--gy-lt)}
+.hw{background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,.07)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bk2)}
+thead th{padding:12px 16px;text-align:left;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--gy-lt);transition:background .12s}
+tbody tr:hover{background:#FAFAFA}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:13px 16px;font-size:13px}
+.nr td{padding:48px;text-align:center;color:var(--gy);font-style:italic}
+
+/* ADMIN */
+#v-admin-dash{display:none}
+.ad-body{max-width:1140px;margin:0 auto;padding:28px 24px 60px}
+.ad-hdr{margin-bottom:22px}
+.ad-hdr h2{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;letter-spacing:-.5px}
+.ad-hdr p{color:#999;font-size:13px;margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.st{background:#fff;border-radius:13px;padding:18px 22px;border:1px solid rgba(0,0,0,.05)}
+.st-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#bbb;margin-bottom:6px}
+.st-n{font-family:"Outfit",sans-serif;font-size:34px;font-weight:900;line-height:1;letter-spacing:-1px}
+.st-s{font-size:11px;color:#bbb;margin-top:3px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.p-ok{background:var(--ok-lt);color:var(--ok)}
+.p-pr{background:var(--pu-lt);color:var(--pu)}
+
+/* SYNC INDICATOR */
+.sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin-left:10px}
+.sync-ok{background:var(--ok-lt);color:var(--ok)}
+.sync-err{background:#FEE2E2;color:var(--rd)}
+.sync-ing{background:var(--pu-lt);color:var(--pu)}
+
+/* TOAST */
+#toast{display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:11px 22px;border-radius:50px;font-weight:700;font-size:13px;z-index:9999;white-space:nowrap;color:#fff;animation:fu .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+@keyframes fu{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+@media(max-width:900px){
+  .home-body{grid-template-columns:1fr}
+  #v-login,#v-admin-login{flex-direction:column}
+  .l-left{padding:40px 32px}
+  .l-right{width:100%;padding:36px 32px}
+  .l-h{font-size:30px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .c-time{font-size:44px}
+  .nav{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="v-login" class="view" style="display:flex">
+  <div class="l-left">
+    <div class="lc">
+      <div class="ll-brand">
+        <span class="ll-fn">FUNNOW</span><span class="ll-gr"> GROUP</span>
+      </div>
+      <h1 class="l-h">Attendance<br><span>Clock-in /</span><br>Clock-out</h1>
+      <p class="l-p">Track your work hours simply. Clock in, clock out, and keep your attendance record in order — all in one place.</p>
+    </div>
+  </div>
+  <div class="l-right">
+    <p class="l-tag">Employee Portal</p>
+    <h2 class="l-title hf">Sign in to continue</h2>
+    <p class="l-sub">Use your FUNNOW Group Google account. A confirmation email will be sent each time you clock in or out.</p>
+    <div id="g_id_onload"
+      data-client_id="833536628314-kciu975apuhvd5c64df197tdg4p91hai.apps.googleusercontent.com"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left"
+      data-width="348">
+    </div>
+    <div class="fe" id="le-err"></div>
+    <div class="divd"><span>or continue with email for testing</span></div>
+    <input type="text" id="le" class="fi" placeholder="yourname@funnow.com">
+    <div class="fe" id="le-err2"></div>
+    <button class="pb" id="l-btn" style="margin-top:10px">Continue</button>
+    <div class="info-b" style="margin-top:14px"><strong>Admin?</strong> Sign in as usual, then tap the <strong>Admin</strong> button in the top-right corner.</div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="v-home" class="view">
+  <div class="nav">
+    <div class="nav-brand">
+      <span class="nav-fn">FUNNOW</span><span class="nav-gr"> GROUP</span>
+      <span class="nav-sep">/</span>
+      <span class="nav-pg">Attendance</span>
+    </div>
+    <div class="nav-r">
+      <span class="nav-nm" id="nav-nm"></span>
+      <div class="nav-av" id="nav-av">?</div>
+      <button class="gb gb-ol" id="h-admin">Admin</button>
+      <button class="gb gb-ol" id="h-out">Sign Out</button>
+    </div>
+  </div>
+  <div class="home-body">
+    <div class="lp">
+      <div class="clock-card">
+        <div class="ci">
+          <div class="c-lbl">Taiwan Time · UTC+8</div>
+          <div class="c-time" id="clk">--:--:--</div>
+          <div class="c-date" id="cld">—</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="uc-row">
+          <div class="uc-av" id="uc-av">?</div>
+          <div>
+            <div class="uc-name" id="uc-name">—</div>
+            <div class="uc-email" id="uc-email">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-lbl">Work Location</div>
+        <div class="mc-btns" id="mc-btns">
+          <button class="mc-btn active" data-mode="Office">Office</button>
+          <button class="mc-btn" data-mode="Work from Home">Work from Home</button>
+          <button class="mc-btn" data-mode="Business Trip">Business Trip</button>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="sc-lbl">Actions</div>
+        <div class="ac-btns">
+          <button class="ac-btn ac-in" id="btn-in">Clock In</button>
+          <button class="ac-btn ac-dis" id="btn-out" disabled>Clock Out</button>
+        </div>
+        <div class="ac-note" id="ac-note"></div>
+      </div>
+      <div class="sc" id="today-card" style="display:none">
+        <div class="sc-lbl">Today's Record</div>
+        <div class="td-grid">
+          <div class="td-item"><div class="td-lbl">Clock In</div><div class="td-val" id="td-in" style="color:var(--or)">—</div></div>
+          <div class="td-item"><div class="td-lbl">Clock Out</div><div class="td-val" id="td-out">—</div></div>
+          <div class="td-item"><div class="td-lbl">Duration</div><div class="td-val" id="td-dur" style="color:var(--pu)">—</div></div>
+          <div class="td-item"><div class="td-lbl">Location</div><div class="td-val" id="td-mode" style="color:var(--ok);font-size:11px;font-weight:700">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="rp">
+      <div class="rp-hdr">
+        <div>
+          <div class="rp-title hf">Attendance History <span class="sync-badge sync-ok" id="sync-badge">Synced</span></div>
+          <div class="rp-sub" id="rp-sub">Your personal records</div>
+        </div>
+        <button class="exp-btn" id="h-exp">Export CSV</button>
+      </div>
+      <div class="filter-row">
+        <input type="date" id="f-from" class="fi2" title="From date">
+        <span style="color:#bbb;font-size:12px">to</span>
+        <input type="date" id="f-to" class="fi2" title="To date">
+        <select id="f-mode" class="fi2">
+          <option value="">All Locations</option>
+          <option value="Office">Office</option>
+          <option value="Work from Home">Work from Home</option>
+          <option value="Business Trip">Business Trip</option>
+        </select>
+        <button class="clr-btn" id="f-clr" style="display:none">Clear</button>
+      </div>
+      <div class="hw">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Clock In</th><th>Clock Out</th>
+            <th>Total Hours</th><th>Work Location</th>
+          </tr></thead>
+          <tbody id="hist-body">
+            <tr class="nr"><td colspan="5">No records yet — clock in to get started.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="v-admin-login" class="view">
+  <div class="l-left dk">
+    <div class="lc">
+      <div class="ll-brand" style="margin-bottom:48px">
+        <span class="ll-fn">FUNNOW</span><span class="ll-gr"> GROUP</span>
+      </div>
+      <h1 class="l-h">Admin<br><span>Dashboard</span></h1>
+      <p class="l-p">View all employee attendance records, filter by person, date or work location, and export for compliance.</p>
+    </div>
+  </div>
+  <div class="l-right">
+    <p class="l-tag">Restricted Access</p>
+    <h2 class="l-title hf">Admin sign-in</h2>
+    <p class="l-sub">This area is restricted to HR administrators and managers only.</p>
+    <button id="al-back" class="back-lnk">← Back to Portal</button>
+    <label class="fl" for="al-pwd">Admin Password</label>
+    <input type="password" id="al-pwd" class="fi" placeholder="Enter admin password">
+    <div class="fe" id="al-err"></div>
+    <button class="pb dk-btn" id="al-enter">Enter Dashboard</button>
+  </div>
+</div>
+
+<!-- ADMIN DASH -->
+<div id="v-admin-dash" class="view">
+  <div class="nav">
+    <div class="nav-brand">
+      <span class="nav-fn">FUNNOW</span><span class="nav-gr"> GROUP</span>
+      <span class="nav-sep">/</span>
+      <span class="nav-pg">Admin Dashboard</span>
+    </div>
+    <div class="nav-r">
+      <button class="gb gb-ol" id="ad-back">← Back to Portal</button>
+    </div>
+  </div>
+  <div class="ad-body">
+    <div class="ad-hdr">
+      <h2>Attendance Records</h2>
+      <p>Taiwan Operations · All employee data — synced to Google Sheets</p>
+    </div>
+    <div class="stats-row">
+      <div class="st"><div class="st-lbl">Total Records</div><div class="st-n" id="s-tot" style="color:var(--or)">0</div><div class="st-s">All time</div></div>
+      <div class="st"><div class="st-lbl">Clocked In Today</div><div class="st-n" id="s-in" style="color:var(--pu)">0</div><div class="st-s">Active</div></div>
+      <div class="st"><div class="st-lbl">Completed Today</div><div class="st-n" id="s-done" style="color:var(--ok)">0</div><div class="st-s">Clocked out</div></div>
+      <div class="st"><div class="st-lbl">Showing</div><div class="st-n" id="s-show" style="color:var(--bk)">0</div><div class="st-s">Current view</div></div>
+    </div>
+    <div class="filter-row">
+      <select id="af-person" class="fi2"><option value="">All Employees</option></select>
+      <input type="date" id="af-from" class="fi2" title="From">
+      <span style="color:#bbb;font-size:12px">to</span>
+      <input type="date" id="af-to" class="fi2" title="To">
+      <select id="af-mode" class="fi2">
+        <option value="">All Locations</option>
+        <option value="Office">Office</option>
+        <option value="Work from Home">Work from Home</option>
+        <option value="Business Trip">Business Trip</option>
+      </select>
+      <button class="clr-btn" id="af-clr" style="display:none">Clear filters</button>
+      <button class="exp-btn" style="margin-left:auto" id="ad-exp">Export CSV</button>
+    </div>
+    <div class="hw">
+      <table>
+        <colgroup>
+          <col style="width:12%"><col style="width:17%"><col style="width:12%">
+          <col style="width:10%"><col style="width:10%"><col style="width:9%">
+          <col style="width:14%"><col style="width:8%">
+        </colgroup>
+        <thead><tr>
+          <th>Name</th><th>Email</th><th>Date</th>
+          <th>Clock In</th><th>Clock Out</th><th>Total Hours</th>
+          <th>Work Location</th><th>Status</th>
+        </tr></thead>
+        <tbody id="ad-body"><tr class="nr"><td colspan="8">No records yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG — paste your Apps Script URL below after setup
+// ═══════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/a/macros/eatigo.com/s/AKfycbw3MkJM1QlhFQ8_OlJp5sCyP32ryIZt0qY3oGoR8pow7pih-LCGaLRuK65To1d75gW6Nw/exec";
+const PWD   = "FunNow@Admin25";
+const LOCAL = "fn_att_v5";
+const GMAIL = "https://gmailmcp.googleapis.com/mcp/v1";
+
+let U = null, MODE = "Office", BUSY = false;
+let records = [];
+let fFrom="", fTo="", fMode="", afPerson="", afFrom="", afTo="", afMode="";
+
+// ── Helpers ──
+const getTW  = () => { const u=Date.now()+new Date().getTimezoneOffset()*60000; return new Date(u+8*3600000); };
+const tStr   = d => [d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,"0")).join(":");
+const t4     = d => [d.getHours(),d.getMinutes()].map(n=>String(n).padStart(2,"0")).join(":");
+const dKey   = d => [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+const dLong  = d => d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+const dDisp  = s => { const [y,m,day]=s.split("-"); return dLong(new Date(+y,+m-1,+day)); };
+const dur    = (a,b) => { const ms=new Date(b)-new Date(a),h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000); return h+"h "+m+"m"; };
+const nameF  = e => e.includes("@")?e.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g,c=>c.toUpperCase()):"Admin";
+const inits  = n => n.split(" ").slice(0,2).map(p=>p[0]||"").join("").toUpperCase()||"?";
+
+// ── Local storage fallback ──
+const loadLocal = () => { try{ return JSON.parse(localStorage.getItem(LOCAL)||"[]"); }catch{ return []; } };
+const saveLocal = r => localStorage.setItem(LOCAL, JSON.stringify(r));
+
+// ── Google Sheets sync ──
+const SHEETS_READY = APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_URL_HERE";
+
+function setSyncBadge(state){
+  const b = document.getElementById("sync-badge");
+  if(!b) return;
+  b.className = "sync-badge";
+  if(state==="ok"){ b.classList.add("sync-ok"); b.textContent="Synced"; }
+  else if(state==="err"){ b.classList.add("sync-err"); b.textContent="Offline mode"; }
+  else { b.classList.add("sync-ing"); b.textContent="Syncing..."; }
+}
+
+async function pushToSheet(rec){
+  if(!SHEETS_READY){ setSyncBadge("err"); return; }
+  setSyncBadge("ing");
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"upsert", record: rec})
+    });
+    setSyncBadge("ok");
+  } catch(e){ setSyncBadge("err"); }
+}
+
+async function fetchFromSheet(){
+  if(!SHEETS_READY){ records = loadLocal(); return; }
+  setSyncBadge("ing");
+  try{
+    const r = await fetch(APPS_SCRIPT_URL+"?action=getAll");
+    const data = await r.json();
+    records = Array.isArray(data) ? data : loadLocal();
+    saveLocal(records);
+    setSyncBadge("ok");
+  } catch(e){
+    records = loadLocal();
+    setSyncBadge("err");
+  }
+}
+
+async function fetchUserRecords(){
+  if(!SHEETS_READY){ records = loadLocal(); renderHistTable(); return; }
+  setSyncBadge("ing");
+  try{
+    const r = await fetch(`${APPS_SCRIPT_URL}?action=getByEmail&email=${encodeURIComponent(U.email)}`);
+    const data = await r.json();
+    const myRecs = Array.isArray(data) ? data : [];
+    // merge with local cache keeping user's records fresh
+    const otherRecs = loadLocal().filter(x => x.email !== U.email);
+    records = [...otherRecs, ...myRecs];
+    saveLocal(records);
+    setSyncBadge("ok");
+  } catch(e){
+    records = loadLocal();
+    setSyncBadge("err");
+  }
+  renderHistTable();
+}
+
+const todayRec = () => {
+  if(!U) return null;
+  const t = dKey(getTW());
+  return records.find(r => r.email===U.email && r.date===t) || null;
+};
+
+// ── Views ──
+const VIEWS = ["v-login","v-home","v-admin-login","v-admin-dash"];
+const show  = v => { VIEWS.forEach(id=>document.getElementById(id).style.display="none"); document.getElementById(v).style.display="block"; };
+
+let TT;
+const toast = (msg,type="success") => {
+  const clr={success:"#16A34A",error:"#DC2626",warning:"#D97706"};
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.style.background=clr[type]||clr.success; el.style.display="block";
+  clearTimeout(TT); TT=setTimeout(()=>el.style.display="none",4000);
+};
+
+// ── Google Sign-In ──
+window.handleGoogleLogin = function(response){
+  try{
+    const p = response.credential.split(".");
+    const pl = JSON.parse(atob(p[1].replace(/-/g,"+").replace(/_/g,"/")));
+    loginUser(pl.email, pl.name, pl.picture);
+  } catch(e){
+    document.getElementById("le-err").textContent = "Google sign-in failed. Please try again.";
+  }
+};
+
+function loginUser(email, name, photo){
+  U = {email, name: name||nameF(email), photo: photo||null};
+  document.getElementById("nav-nm").textContent  = U.name;
+  document.getElementById("nav-av").textContent  = inits(U.name);
+  document.getElementById("uc-name").textContent  = U.name;
+  document.getElementById("uc-email").textContent = U.email;
+  const av = document.getElementById("uc-av");
+  if(U.photo){ av.outerHTML = `<img src="${U.photo}" class="uc-ph" id="uc-av" alt="${U.name}">`; }
+  else{ av.textContent = inits(U.name); }
+  show("v-home");
+  records = loadLocal();
+  renderHome();
+  fetchUserRecords();
+}
+
+// ── Clock ──
+const tick = () => {
+  const now = getTW();
+  const ce=document.getElementById("clk"), de=document.getElementById("cld");
+  if(ce) ce.textContent = tStr(now);
+  if(de) de.textContent = dLong(now);
+  if(document.getElementById("v-home").style.display!=="none") renderButtons();
+};
+setInterval(tick,1000); tick();
+
+// ── Render home ──
+function renderHome(){
+  renderButtons();
+  renderTodayCard();
+  renderHistTable();
+}
+
+function renderButtons(){
+  const rec=todayRec(), hasIn=rec&&rec.clockIn, hasOut=rec&&rec.clockOut;
+  const btnIn=document.getElementById("btn-in"), btnOut=document.getElementById("btn-out");
+  const note=document.getElementById("ac-note");
+  if(hasIn&&!hasOut){
+    btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
+    btnOut.className="ac-btn ac-out"; btnOut.disabled=false;
+    note.textContent="Clocked in at "+rec.clockInDisplay;
+  } else if(hasOut){
+    btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
+    btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
+    note.textContent="Day complete — have a great evening!";
+  } else {
+    btnIn.className="ac-btn ac-in"; btnIn.disabled=false;
+    btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
+    note.textContent="";
+  }
+}
+
+function renderTodayCard(){
+  const rec=todayRec(), hasIn=rec&&rec.clockIn;
+  const tc=document.getElementById("today-card");
+  if(hasIn){
+    tc.style.display="block";
+    document.getElementById("td-in").textContent  = rec.clockInDisplay||"—";
+    document.getElementById("td-out").textContent = rec.clockOutDisplay||"—";
+    document.getElementById("td-dur").textContent = rec.duration||(rec.clockOut?"—":"Ongoing");
+    document.getElementById("td-mode").textContent = rec.workMode||"—";
+  } else { tc.style.display="none"; }
+}
+
+function renderHistTable(){
+  let data = records.filter(r => r.email===U.email);
+  if(fFrom) data = data.filter(r => r.date >= fFrom);
+  if(fTo)   data = data.filter(r => r.date <= fTo);
+  if(fMode) data = data.filter(r => r.workMode===fMode);
+  document.getElementById("rp-sub").textContent = data.length+" record"+(data.length===1?"":"s");
+  document.getElementById("f-clr").style.display=(fFrom||fTo||fMode)?"block":"none";
+  const tbody=document.getElementById("hist-body");
+  if(!data.length){ tbody.innerHTML="<tr class='nr'><td colspan='5'>No records found.</td></tr>"; return; }
+  tbody.innerHTML=[...data].reverse().map(r=>{
+    const isToday=r.date===dKey(getTW());
+    return`<tr>
+      <td style="font-weight:700">${dDisp(r.date)}${isToday?` <span style="font-size:10px;background:var(--or-lt);color:var(--or);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:4px">Today</span>`:""}</td>
+      <td style="color:var(--or);font-weight:700;font-family:Outfit,sans-serif">${r.clockInDisplay||"—"}</td>
+      <td style="font-weight:700;font-family:Outfit,sans-serif">${r.clockOutDisplay||`<span style="color:#bbb;font-style:italic;font-size:12px;font-family:DM Sans">In progress</span>`}</td>
+      <td style="color:var(--pu);font-weight:700;font-family:Outfit,sans-serif">${r.duration||(r.clockIn&&!r.clockOut?`<span style="color:#bbb;font-style:italic;font-size:12px;font-family:DM Sans">Ongoing</span>`:"—")}</td>
+      <td style="font-size:12px;font-weight:600;color:#666">${r.workMode||"—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ── Email ──
+async function sendEmail(type,data){
+  const isIn=type==="in",clr=isIn?"#FF5537":"#252729";
+  const subj=`[FUNNOW Group] ${isIn?"Clock-In":"Clock-Out"} Confirmed — ${data.date}`;
+  const rows=isIn
+    ?`<tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Date</td><td style="padding:11px 16px;font-weight:700">${data.date}</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock In</td><td style="padding:11px 16px;font-weight:700;color:#FF5537">${data.clockIn} (Taiwan Time)</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px">Work Location</td><td style="padding:11px 16px;font-weight:700">${data.workMode}</td></tr>`
+    :`<tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Date</td><td style="padding:11px 16px;font-weight:700">${data.date}</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock In</td><td style="padding:11px 16px;font-weight:700">${data.clockIn}</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock Out</td><td style="padding:11px 16px;font-weight:700;color:#FF5537">${data.clockOut}</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Total Hours</td><td style="padding:11px 16px;font-weight:700;color:#16A34A">${data.duration}</td></tr>
+       <tr><td style="padding:11px 16px;color:#999;font-size:13px">Work Location</td><td style="padding:11px 16px;font-weight:700">${data.workMode}</td></tr>`;
+  const html=`<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto"><div style="background:${clr};border-radius:14px 14px 0 0;padding:24px 30px"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">FUNNOW Group · Attendance</div><h1 style="margin:0;color:#fff;font-size:20px;font-weight:900">${isIn?"Clock-In Confirmed":"Clock-Out Confirmed"}</h1></div><div style="background:#fafafa;padding:24px 30px;border-radius:0 0 14px 14px;border:1px solid #eee;border-top:none"><p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.65">Hi ${data.name}, your attendance record has been saved.</p><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:9px;overflow:hidden;border:1px solid #eee">${rows}</table><p style="margin:16px 0 0;font-size:11px;color:#ccc">Automated message · FUNNOW Group Attendance System</p></div></div>`;
+  try{
+    await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:500,
+        mcp_servers:[{type:"url",url:GMAIL,name:"gmail"}],
+        messages:[{role:"user",content:`Send an email to ${U.email} with subject "${subj}" and this HTML body:\n${html}`}]})});
+  } catch(e){ console.warn("Email skipped:",e); }
+}
+
+// ── Clock In ──
+async function doClockIn(){
+  if(BUSY) return;
+  const rec=todayRec();
+  if(rec&&rec.clockIn){ toast("Already clocked in today","warning"); return; }
+  BUSY=true;
+  document.getElementById("btn-in").className="ac-btn ac-dis"; document.getElementById("btn-in").disabled=true;
+  document.getElementById("btn-in").textContent="Recording...";
+  const now=getTW(), today=dKey(now), t=t4(now);
+  const newRec={id:`${U.email}_${today}`,email:U.email,name:U.name,date:today,
+    clockIn:new Date().toISOString(),clockInDisplay:t,
+    clockOut:null,clockOutDisplay:null,workMode:MODE,duration:null};
+  records = records.filter(r=>!(r.email===U.email&&r.date===today));
+  records.push(newRec); saveLocal(records);
+  await pushToSheet(newRec);
+  await sendEmail("in",{name:U.name,date:dDisp(today),clockIn:t,workMode:MODE});
+  BUSY=false; document.getElementById("btn-in").textContent="Clock In";
+  toast("Clocked in at "+t,"success"); renderHome();
+}
+
+// ── Clock Out ──
+async function doClockOut(){
+  if(BUSY) return;
+  const rec=todayRec();
+  if(!rec||!rec.clockIn){ toast("No clock-in record found","error"); return; }
+  if(rec.clockOut){ toast("Already clocked out today","warning"); return; }
+  BUSY=true;
+  document.getElementById("btn-out").className="ac-btn ac-dis"; document.getElementById("btn-out").disabled=true;
+  document.getElementById("btn-out").textContent="Recording...";
+  const now=getTW(), today=dKey(now), t=t4(now), d=dur(rec.clockIn,new Date().toISOString());
+  const idx=records.findIndex(r=>r.email===U.email&&r.date===today);
+  records[idx]={...records[idx],clockOut:new Date().toISOString(),clockOutDisplay:t,duration:d};
+  saveLocal(records);
+  await pushToSheet(records[idx]);
+  await sendEmail("out",{name:U.name,date:dDisp(today),clockIn:rec.clockInDisplay,clockOut:t,duration:d,workMode:rec.workMode});
+  BUSY=false; document.getElementById("btn-out").textContent="Clock Out";
+  toast("Clocked out at "+t+" · "+d,"success"); renderHome();
+}
+
+// ── Admin render ──
+async function renderAdmin(){
+  await fetchFromSheet();
+  const today=dKey(getTW());
+  const persons=[...new Set(records.map(r=>r.email))].sort();
+  const sel=document.getElementById("af-person");
+  sel.innerHTML="<option value=''>All Employees</option>"+
+    persons.map(e=>`<option value="${e}"${e===afPerson?" selected":""}>${nameF(e)} (${e})</option>`).join("");
+  let filt=records;
+  if(afPerson) filt=filt.filter(r=>r.email===afPerson);
+  if(afFrom)   filt=filt.filter(r=>r.date>=afFrom);
+  if(afTo)     filt=filt.filter(r=>r.date<=afTo);
+  if(afMode)   filt=filt.filter(r=>r.workMode===afMode);
+  document.getElementById("s-tot").textContent  = records.length;
+  document.getElementById("s-in").textContent   = records.filter(r=>r.date===today&&r.clockIn).length;
+  document.getElementById("s-done").textContent = records.filter(r=>r.date===today&&r.clockOut).length;
+  document.getElementById("s-show").textContent = filt.length;
+  document.getElementById("af-clr").style.display=(afPerson||afFrom||afTo||afMode)?"block":"none";
+  const tbody=document.getElementById("ad-body");
+  if(!filt.length){ tbody.innerHTML="<tr class='nr'><td colspan='8'>No records found</td></tr>"; return; }
+  tbody.innerHTML=[...filt].reverse().map(r=>{
+    const st=r.clockOut?`<span class="pill p-ok">Complete</span>`:`<span class="pill p-pr">In Progress</span>`;
+    return`<tr>
+      <td style="font-weight:700">${r.name}</td>
+      <td style="color:#999;font-size:12px">${r.email}</td>
+      <td>${dDisp(r.date)}</td>
+      <td style="color:var(--or);font-weight:700;font-family:Outfit,sans-serif">${r.clockInDisplay||"—"}</td>
+      <td style="font-weight:700;font-family:Outfit,sans-serif">${r.clockOutDisplay||"—"}</td>
+      <td style="color:var(--pu);font-weight:700;font-family:Outfit,sans-serif">${r.duration||"—"}</td>
+      <td style="font-size:12px;font-weight:600;color:#666">${r.workMode||"—"}</td>
+      <td>${st}</td>
+    </tr>`;
+  }).join("");
+}
+
+function exportCSV(scope){
+  const src = scope==="user" ? records.filter(r=>r.email===U.email) : [...records];
+  let data=src;
+  if(scope==="user"){ if(fFrom) data=data.filter(r=>r.date>=fFrom); if(fTo) data=data.filter(r=>r.date<=fTo); if(fMode) data=data.filter(r=>r.workMode===fMode); }
+  if(scope==="admin"){ if(afPerson) data=data.filter(r=>r.email===afPerson); if(afFrom) data=data.filter(r=>r.date>=afFrom); if(afTo) data=data.filter(r=>r.date<=afTo); if(afMode) data=data.filter(r=>r.workMode===afMode); }
+  const hdr=["Name","Email","Date","Clock In (TWN 24h)","Clock Out (TWN 24h)","Total Hours","Work Location","Status"];
+  const rows=data.map(r=>[r.name,r.email,dDisp(r.date),r.clockInDisplay||"",r.clockOutDisplay||"",r.duration||"",r.workMode,r.clockOut?"Complete":"In Progress"]);
+  const csv=[hdr,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
+  a.download=`funnow_attendance_${dKey(getTW())}.csv`; a.click();
+}
+
+// ── Events ──
+document.getElementById("l-btn").addEventListener("click",()=>{
+  const email=document.getElementById("le").value.trim();
+  const err=document.getElementById("le-err2");
+  if(!email||!email.includes("@")||!email.includes(".")){ err.textContent="Please enter a valid email address"; return; }
+  err.textContent=""; loginUser(email,nameF(email),null);
+});
+document.getElementById("le").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("l-btn").click();});
+document.getElementById("h-admin").addEventListener("click",()=>show("v-admin-login"));
+document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; show("v-login"); });
+document.getElementById("mc-btns").addEventListener("click",e=>{
+  const btn=e.target.closest(".mc-btn"); if(!btn) return;
+  document.querySelectorAll(".mc-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); MODE=btn.dataset.mode;
+});
+document.getElementById("btn-in").addEventListener("click",doClockIn);
+document.getElementById("btn-out").addEventListener("click",doClockOut);
+document.getElementById("h-exp").addEventListener("click",()=>exportCSV("user"));
+
+// User filters
+["f-from","f-to"].forEach(id=>document.getElementById(id).addEventListener("change",e=>{ id==="f-from"?fFrom=e.target.value:fTo=e.target.value; renderHistTable(); }));
+document.getElementById("f-mode").addEventListener("change",e=>{ fMode=e.target.value; renderHistTable(); });
+document.getElementById("f-clr").addEventListener("click",()=>{ fFrom=fTo=fMode=""; document.getElementById("f-from").value=""; document.getElementById("f-to").value=""; document.getElementById("f-mode").value=""; renderHistTable(); });
+
+// Admin login
+document.getElementById("al-back").addEventListener("click",()=>show("v-home"));
+document.getElementById("al-enter").addEventListener("click",()=>{
+  const pwd=document.getElementById("al-pwd").value;
+  if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); }
+  else{ document.getElementById("al-err").textContent="Incorrect password."; }
+});
+document.getElementById("al-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("al-enter").click();});
+document.getElementById("ad-back").addEventListener("click",()=>show("v-home"));
+
+// Admin filters
+document.getElementById("af-person").addEventListener("change",e=>{ afPerson=e.target.value; renderAdmin(); });
+["af-from","af-to"].forEach(id=>document.getElementById(id).addEventListener("change",e=>{ id==="af-from"?afFrom=e.target.value:afTo=e.target.value; renderAdmin(); }));
+document.getElementById("af-mode").addEventListener("change",e=>{ afMode=e.target.value; renderAdmin(); });
+document.getElementById("af-clr").addEventListener("click",()=>{
+  afPerson=afFrom=afTo=afMode="";
+  ["af-person","af-from","af-to","af-mode"].forEach(id=>{ const el=document.getElementById(id); el.tagName==="SELECT"?el.value="":el.value=""; });
+  renderAdmin();
+});
+document.getElementById("ad-exp").addEventListener("click",()=>exportCSV("admin"));
+</script>
+</body>
+</html>
