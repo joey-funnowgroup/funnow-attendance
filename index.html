@@ -230,6 +230,7 @@ tbody td{padding:13px 16px;font-size:13px}
     <div class="nav-r">
       <span class="nav-nm" id="nav-nm"></span>
       <div class="nav-av" id="nav-av">?</div>
+      <button class="gb gb-ol" id="h-admin-nav" style="display:none; color: var(--pu); border-color: rgba(99, 102, 241, 0.4);">Admin Dashboard</button>
       <button class="gb gb-ol" id="h-out">Sign Out</button>
     </div>
   </div>
@@ -352,8 +353,8 @@ tbody td{padding:13px 16px;font-size:13px}
     <h2 class="l-title hf">Admin sign-in</h2>
     <p class="l-sub">This area is restricted to HR administrators and managers only.</p>
     <button id="al-back" class="back-lnk">← Back to Portal</button>
-    <label class="fl" for="al-pwd">Admin Password</label>
-    <input type="password" id="al-pwd" class="fi" placeholder="Enter admin password">
+    <label class="fl" for="al-pwd">Admin Master Password</label>
+    <input type="password" id="al-pwd" class="fi" placeholder="Enter master password">
     <div class="fe" id="al-err"></div>
     <button class="pb dk-btn" id="al-enter">Enter Dashboard</button>
   </div>
@@ -411,7 +412,7 @@ tbody td{padding:13px 16px;font-size:13px}
       <button class="clr-btn" id="af-clr" style="display:none">Clear filters</button>
       <button class="exp-btn" style="margin-left:auto" id="ad-exp">Export CSV</button>
     </div>
-    <div class="hw">
+    <div class="hw" style="margin-bottom: 32px;">
       <table>
         <colgroup>
           <col style="width:12%"><col style="width:17%"><col style="width:12%">
@@ -426,6 +427,24 @@ tbody td{padding:13px 16px;font-size:13px}
         <tbody id="ad-body"><tr class="nr"><td colspan="8">No records yet</td></tr></tbody>
       </table>
     </div>
+
+    <div class="ad-hdr" style="margin-bottom: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--gy-md);">
+      <h2>Admin Role Management</h2>
+      <p>Authorized admins can access this dashboard via the Employee Portal without needing the master password.</p>
+    </div>
+    <div class="hw" style="padding: 24px;">
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+        <input type="text" id="new-admin-email" class="fi" placeholder="hr.manager@funnow.com" style="max-width: 320px; margin-bottom: 0;">
+        <button class="btn-submit" onclick="addAdminRole()">Grant Admin Access</button>
+      </div>
+      <table style="max-width: 600px; border: 1px solid var(--gy-lt); border-radius: 8px;">
+        <thead><tr><th>Authorized Admin Email</th><th style="text-align:right">Action</th></tr></thead>
+        <tbody id="admin-list-body">
+          <tr class="nr"><td colspan="2">Loading admins...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 
@@ -442,6 +461,7 @@ const GMAIL = "https://gmailmcp.googleapis.com/mcp/v1";
 
 let U = null, MODE = "Office", BUSY = false;
 let records = [];
+let adminEmails = []; // Holds list of authorized admins
 let fFrom="", fTo="", fMode="", afPerson="", afFrom="", afTo="", afMode="";
 let editDateContext = "";
 
@@ -470,6 +490,22 @@ function setSyncBadge(state){
   if(state==="ok"){ b.classList.add("sync-ok"); b.textContent="Synced"; }
   else if(state==="err"){ b.classList.add("sync-err"); b.textContent="Offline mode"; }
   else { b.classList.add("sync-ing"); b.textContent="Syncing..."; }
+}
+
+// Fetch list of authorized Admins
+async function fetchAdmins() {
+  if(!SHEETS_READY) return;
+  try {
+    const r = await fetch(APPS_SCRIPT_URL + "?action=getAdmins");
+    adminEmails = await r.json();
+  } catch(e) { console.warn("Could not fetch admins", e); }
+  
+  // Show bypass button if current user is admin
+  if (U && adminEmails.includes(U.email.toLowerCase())) {
+    document.getElementById("h-admin-nav").style.display = "inline-block";
+  } else {
+    document.getElementById("h-admin-nav").style.display = "none";
+  }
 }
 
 async function pushToSheet(rec){
@@ -565,6 +601,7 @@ function loginUser(email, name, photo){
   records = loadLocal();
   renderHome();
   fetchUserRecords();
+  fetchAdmins(); // Check if this person gets the direct Admin button
 }
 
 // ── Clock ──
@@ -665,29 +702,14 @@ document.getElementById("submit-edit-btn").addEventListener("click", async () =>
   if(!val) return toast("Please enter a proposed value", "error");
   if(!reason) return toast("Please provide a reason", "error");
 
-  const requestPayload = {
-    action: "requestEdit",
-    email: U.email,
-    name: U.name,
-    date: editDateContext,
-    field: field,
-    value: val,
-    reason: reason
-  };
-
+  const requestPayload = { action: "requestEdit", email: U.email, name: U.name, date: editDateContext, field: field, value: val, reason: reason };
   const btn = document.getElementById("submit-edit-btn");
   btn.textContent = "Sending..."; btn.disabled = true;
   
   try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify(requestPayload)
-    });
+    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(requestPayload) });
     toast("Request sent to Admin!", "success");
-  } catch(e) {
-    toast("Error sending request.", "warning");
-  }
+  } catch(e) { toast("Error sending request.", "warning"); }
 
   closeEditModal();
   btn.textContent = "Send Request"; btn.disabled = false;
@@ -735,22 +757,65 @@ window.handleReqAction = async function(reqId, actionType) {
   if(!confirm(`Are you sure you want to ${actionType === 'approveEdit' ? 'APPROVE' : 'REJECT'} this request?`)) return;
   toast("Processing...", "warning");
   try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({ action: actionType, reqId: reqId })
-    });
-    toast(`Request ${actionType === 'approveEdit' ? 'approved' : 'rejected'}!`, "success");
-    // Reload dashboard to show changes
+    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: actionType, reqId: reqId }) });
+    toast(`Request processed!`, "success");
     setTimeout(() => renderAdmin(), 1000);
-  } catch(e) {
-    toast("Error processing request.", "error");
-  }
+  } catch(e) { toast("Error processing request.", "error"); }
 };
+
+// ── Admin Manage Roles ──
+window.addAdminRole = async function() {
+  const email = document.getElementById("new-admin-email").value.trim().toLowerCase();
+  if(!email || !email.includes("@")) return toast("Valid email required", "error");
+  if(adminEmails.includes(email)) return toast("Already an admin", "warning");
+
+  toast("Adding admin...", "warning");
+  adminEmails.push(email); // Optimistic update
+  renderAdminList();
+  document.getElementById("new-admin-email").value = "";
+  
+  try {
+    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action: "addAdmin", email: email}) });
+    toast("Admin added successfully!", "success");
+    fetchAdmins();
+  } catch(e) { toast("Error adding admin", "error"); }
+};
+
+window.removeAdminRole = async function(email) {
+  if(!confirm(`Remove admin privileges for ${email}?`)) return;
+  toast("Removing admin...", "warning");
+  adminEmails = adminEmails.filter(e => e !== email); // Optimistic update
+  renderAdminList();
+  
+  try {
+    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action: "removeAdmin", email: email}) });
+    toast("Admin removed!", "success");
+    fetchAdmins();
+  } catch(e) { toast("Error removing admin", "error"); }
+};
+
+function renderAdminList() {
+  const tbody = document.getElementById("admin-list-body");
+  if(!adminEmails.length) {
+    tbody.innerHTML = "<tr class='nr'><td colspan='2'>No authorized admins assigned. Master password is required to login.</td></tr>";
+    return;
+  }
+  tbody.innerHTML = adminEmails.map(email => `
+    <tr>
+      <td style="font-weight:600">${email}</td>
+      <td style="text-align:right;">
+        <button class="btn-action btn-reject" style="margin-right:0;" onclick="removeAdminRole('${email}')">Remove</button>
+      </td>
+    </tr>
+  `).join("");
+}
 
 // ── Admin render ──
 async function renderAdmin(){
   await fetchFromSheet();
+  await fetchAdmins(); // Make sure admin list is fresh
+  renderAdminList();
+
   const today=dKey(getTW());
   const persons=[...new Set(records.map(r=>r.email))].sort();
   const sel=document.getElementById("af-person");
@@ -835,7 +900,13 @@ document.getElementById("l-btn").addEventListener("click",()=>{
 });
 document.getElementById("le").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("l-btn").click();});
 document.getElementById("l-admin-btn").addEventListener("click", () => show("v-admin-login"));
-document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; show("v-login"); });
+document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; document.getElementById("h-admin-nav").style.display="none"; show("v-login"); });
+
+// NEW: Quick access button for authorized admins
+document.getElementById("h-admin-nav").addEventListener("click", () => {
+  show("v-admin-dash");
+  renderAdmin();
+});
 
 document.getElementById("mc-btns").addEventListener("click", e => {
   const btn = e.target.closest(".mc-btn"); 
@@ -860,7 +931,10 @@ document.getElementById("al-enter").addEventListener("click",()=>{
   else{ document.getElementById("al-err").textContent="Incorrect password."; }
 });
 document.getElementById("al-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("al-enter").click();});
-document.getElementById("ad-back").addEventListener("click",()=>show("v-login")); 
+document.getElementById("ad-back").addEventListener("click",()=>{
+  // If user is actually logged into an account, return to home, else return to login screen
+  if(U) show("v-home"); else show("v-login");
+}); 
 
 // Admin filters
 document.getElementById("af-person").addEventListener("change",e=>{ afPerson=e.target.value; renderAdmin(); });
@@ -872,6 +946,9 @@ document.getElementById("af-clr").addEventListener("click",()=>{
   renderAdmin();
 });
 document.getElementById("ad-exp").addEventListener("click",()=>exportCSV("admin"));
+
+// Run on load
+fetchAdmins();
 </script>
 </body>
 </html>
