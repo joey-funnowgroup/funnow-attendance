@@ -38,7 +38,7 @@ body{background:var(--gy-lt);min-height:100vh}
 .gb-or{background:var(--or);color:#fff}
 .gb-or:hover{background:var(--or-h)}
 
-/* LOGIN SPLIT (Fixed display issue here) */
+/* LOGIN SPLIT */
 #v-login,#v-admin-login{min-height:100vh}
 .l-left{flex:1;background:var(--or);display:flex;flex-direction:column;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
 .l-left.dk{background:var(--bk2)}
@@ -67,8 +67,6 @@ body{background:var(--gy-lt);min-height:100vh}
 .divd{display:flex;align-items:center;gap:12px;margin:20px 0}
 .divd::before,.divd::after{content:"";flex:1;height:1px;background:var(--gy-md)}
 .divd span{font-size:12px;color:#bbb;font-weight:600;white-space:nowrap}
-.info-b{margin-top:14px;padding:11px 14px;background:var(--gy-lt);border-radius:8px;font-size:12px;color:#999;line-height:1.65;border-left:3px solid var(--gy-md)}
-.info-b strong{color:var(--bk)}
 .back-lnk{background:none;border:none;color:var(--or);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;padding:0;margin-bottom:20px;display:inline-block}
 
 /* HOME */
@@ -142,6 +140,10 @@ tbody td{padding:13px 16px;font-size:13px}
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .p-ok{background:var(--ok-lt);color:var(--ok)}
 .p-pr{background:var(--pu-lt);color:var(--pu)}
+.btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-weight: 700; font-size: 11px; cursor: pointer; transition: opacity 0.2s; margin-right: 6px; }
+.btn-action:hover { opacity: 0.8; }
+.btn-approve { background: var(--ok-lt); color: var(--ok); }
+.btn-reject { background: #FEE2E2; color: var(--rd); }
 
 /* SYNC INDICATOR */
 .sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin-left:10px}
@@ -377,10 +379,10 @@ tbody td{padding:13px 16px;font-size:13px}
     <div class="hw" style="margin-bottom: 32px;">
       <table>
         <thead><tr>
-          <th>Employee</th><th>Date</th><th>Field</th><th>Proposed Value</th><th>Reason</th>
+          <th>Employee</th><th>Date</th><th>Field</th><th>Proposed Value</th><th>Reason</th><th>Actions</th>
         </tr></thead>
         <tbody id="admin-requests-body">
-          <tr class="nr"><td colspan="5">No pending requests at the moment.</td></tr>
+          <tr class="nr"><td colspan="6">No pending requests at the moment.</td></tr>
         </tbody>
       </table>
     </div>
@@ -474,12 +476,12 @@ async function pushToSheet(rec){
   if(!SHEETS_READY){ setSyncBadge("err"); return; }
   setSyncBadge("ing");
   try{
-    const response = await fetch(APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: "POST",
+      mode: "no-cors",
       body: JSON.stringify({action: "upsert", record: rec})
     });
-    if (response.ok) setSyncBadge("ok");
-    else setSyncBadge("err");
+    setSyncBadge("ok");
   } catch(e){ 
     setSyncBadge("err"); 
   }
@@ -679,6 +681,7 @@ document.getElementById("submit-edit-btn").addEventListener("click", async () =>
   try {
     await fetch(APPS_SCRIPT_URL, {
       method: "POST",
+      mode: "no-cors",
       body: JSON.stringify(requestPayload)
     });
     toast("Request sent to Admin!", "success");
@@ -727,6 +730,24 @@ async function doClockOut(){
   toast("Clocked out at "+t+" · "+d,"success"); renderHome();
 }
 
+// ── Admin Handle Requests ──
+window.handleReqAction = async function(reqId, actionType) {
+  if(!confirm(`Are you sure you want to ${actionType === 'approveEdit' ? 'APPROVE' : 'REJECT'} this request?`)) return;
+  toast("Processing...", "warning");
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({ action: actionType, reqId: reqId })
+    });
+    toast(`Request ${actionType === 'approveEdit' ? 'approved' : 'rejected'}!`, "success");
+    // Reload dashboard to show changes
+    setTimeout(() => renderAdmin(), 1000);
+  } catch(e) {
+    toast("Error processing request.", "error");
+  }
+};
+
 // ── Admin render ──
 async function renderAdmin(){
   await fetchFromSheet();
@@ -746,6 +767,7 @@ async function renderAdmin(){
   document.getElementById("s-show").textContent = filt.length;
   document.getElementById("af-clr").style.display=(afPerson||afFrom||afTo||afMode)?"block":"none";
   
+  // Render Main Data Table
   const tbody=document.getElementById("ad-body");
   if(!filt.length){ tbody.innerHTML="<tr class='nr'><td colspan='8'>No records found</td></tr>"; }
   else {
@@ -762,6 +784,32 @@ async function renderAdmin(){
         <td>${st}</td>
       </tr>`;
     }).join("");
+  }
+
+  // Fetch & Render Pending Requests
+  const reqBody = document.getElementById("admin-requests-body");
+  try {
+    const reqRes = await fetch(APPS_SCRIPT_URL + "?action=getRequests");
+    const pendingReqs = await reqRes.json();
+    if(!pendingReqs || !pendingReqs.length) {
+      reqBody.innerHTML = "<tr class='nr'><td colspan='6'>No pending requests at the moment.</td></tr>";
+    } else {
+      reqBody.innerHTML = pendingReqs.map(r => `
+        <tr>
+          <td style="font-weight:700">${r.name}<br><span style="font-size:11px;color:#999;font-weight:400">${r.email}</span></td>
+          <td style="font-weight:700">${dDisp(r.date)}</td>
+          <td style="color:var(--pu);font-weight:700">${r.field}</td>
+          <td style="color:var(--or);font-weight:700">${r.value}</td>
+          <td style="font-size:12px;color:#666">${r.reason}</td>
+          <td>
+            <button class="btn-action btn-approve" onclick="handleReqAction('${r.reqId}', 'approveEdit')">Approve</button>
+            <button class="btn-action btn-reject" onclick="handleReqAction('${r.reqId}', 'rejectEdit')">Reject</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+  } catch(e) {
+    reqBody.innerHTML = "<tr class='nr'><td colspan='6'>Error loading requests. Ensure script is deployed.</td></tr>";
   }
 }
 
@@ -805,14 +853,14 @@ document.getElementById("f-mode").addEventListener("change",e=>{ fMode=e.target.
 document.getElementById("f-clr").addEventListener("click",()=>{ fFrom=fTo=fMode=""; document.getElementById("f-from").value=""; document.getElementById("f-to").value=""; document.getElementById("f-mode").value=""; renderHistTable(); });
 
 // Admin login
-document.getElementById("al-back").addEventListener("click",()=>show("v-login")); // Fixed 'Back to Portal' link
+document.getElementById("al-back").addEventListener("click",()=>show("v-login")); 
 document.getElementById("al-enter").addEventListener("click",()=>{
   const pwd=document.getElementById("al-pwd").value;
   if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); }
   else{ document.getElementById("al-err").textContent="Incorrect password."; }
 });
 document.getElementById("al-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("al-enter").click();});
-document.getElementById("ad-back").addEventListener("click",()=>show("v-login")); // Fixed 'Back to Portal' link
+document.getElementById("ad-back").addEventListener("click",()=>show("v-login")); 
 
 // Admin filters
 document.getElementById("af-person").addEventListener("change",e=>{ afPerson=e.target.value; renderAdmin(); });
