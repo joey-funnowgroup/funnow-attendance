@@ -38,7 +38,7 @@ body{background:var(--gy-lt);min-height:100vh}
 .gb-or{background:var(--or);color:#fff}
 .gb-or:hover{background:var(--or-h)}
 
-/* LOGIN SPLIT */
+/* LOGIN SPLIT (Fixed display issue here) */
 #v-login,#v-admin-login{min-height:100vh}
 .l-left{flex:1;background:var(--or);display:flex;flex-direction:column;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
 .l-left.dk{background:var(--bk2)}
@@ -128,7 +128,7 @@ tbody tr:last-child{border-bottom:none}
 tbody td{padding:13px 16px;font-size:13px}
 .nr td{padding:48px;text-align:center;color:var(--gy);font-style:italic}
 
-/* ADMIN */
+/* ADMIN DASHBOARD SPECIFIC */
 #v-admin-dash{display:none}
 .ad-body{max-width:1140px;margin:0 auto;padding:28px 24px 60px}
 .ad-hdr{margin-bottom:22px}
@@ -153,6 +153,19 @@ tbody td{padding:13px 16px;font-size:13px}
 #toast{display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:11px 22px;border-radius:50px;font-weight:700;font-size:13px;z-index:9999;white-space:nowrap;color:#fff;animation:fu .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
 @keyframes fu{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+/* EDIT REQUEST MODAL */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9000; justify-content: center; align-items: center; }
+.modal { background: #fff; padding: 28px; border-radius: 16px; width: 400px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+.modal h3 { font-family: "Outfit", sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.3px; }
+.modal p { font-size: 13px; color: #999; margin-bottom: 20px; line-height: 1.5; }
+.modal select, .modal input, .modal textarea { width: 100%; padding: 12px 14px; margin-bottom: 16px; border: 1.5px solid var(--gy-md); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.modal select:focus, .modal input:focus, .modal textarea:focus { border-color: var(--or); }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.btn-cancel { padding: 10px 18px; border: none; background: var(--gy-lt); color: #666; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
+.btn-cancel:hover { background: var(--gy-md); }
+.btn-submit { padding: 10px 18px; border: none; background: var(--or); color: #fff; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px; font-family: "Outfit", sans-serif; transition: background 0.2s; }
+.btn-submit:hover { background: var(--or-h); }
+
 @media(max-width:900px){
   .home-body{grid-template-columns:1fr}
   #v-login,#v-admin-login{flex-direction:column}
@@ -167,7 +180,6 @@ tbody td{padding:13px 16px;font-size:13px}
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="v-login" class="view" style="display:flex">
   <div class="l-left">
     <div class="lc">
@@ -201,11 +213,11 @@ tbody td{padding:13px 16px;font-size:13px}
     <input type="text" id="le" class="fi" placeholder="yourname@funnow.com">
     <div class="fe" id="le-err2"></div>
     <button class="pb" id="l-btn" style="margin-top:10px">Continue</button>
-    <div class="divd"><span>or</span></div> <button class="pb gb-ol" id="l-admin-btn" style="color:#555; border:1.5px solid var(--gy-md); background:#fff;">Go to Admin Portal</button>
+    <div class="divd"><span>or</span></div> 
+    <button class="pb gb-ol" id="l-admin-btn" style="color:#555; border:1.5px solid var(--gy-md); background:#fff;">Go to Admin Portal</button>
   </div>
 </div>
 
-<!-- HOME -->
 <div id="v-home" class="view">
   <div class="nav">
     <div class="nav-brand">
@@ -298,7 +310,31 @@ tbody td{padding:13px 16px;font-size:13px}
   </div>
 </div>
 
-<!-- ADMIN LOGIN -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal">
+    <h3>Request Time Edit</h3>
+    <p>Submit a request to your HR Admin to correct an accidental click or forgotten punch.</p>
+    
+    <label class="fl">Field to Change</label>
+    <select id="edit-field">
+      <option value="Clock In">Clock In Time</option>
+      <option value="Clock Out">Clock Out Time</option>
+      <option value="Location">Work Location</option>
+    </select>
+
+    <label class="fl">Proposed Correct Value</label>
+    <input type="text" id="edit-value" placeholder="e.g., 09:00 or Office">
+
+    <label class="fl">Reason for change</label>
+    <textarea id="edit-reason" rows="2" placeholder="e.g., Forgot to clock in, accidentally double-clicked..."></textarea>
+
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-submit" id="submit-edit-btn">Send Request</button>
+    </div>
+  </div>
+</div>
+
 <div id="v-admin-login" class="view">
   <div class="l-left dk">
     <div class="lc">
@@ -321,7 +357,6 @@ tbody td{padding:13px 16px;font-size:13px}
   </div>
 </div>
 
-<!-- ADMIN DASH -->
 <div id="v-admin-dash" class="view">
   <div class="nav">
     <div class="nav-brand">
@@ -334,6 +369,22 @@ tbody td{padding:13px 16px;font-size:13px}
     </div>
   </div>
   <div class="ad-body">
+    
+    <div class="ad-hdr" style="margin-bottom: 16px;">
+      <h2>Pending Edit Requests</h2>
+      <p>Requests requiring admin approval</p>
+    </div>
+    <div class="hw" style="margin-bottom: 32px;">
+      <table>
+        <thead><tr>
+          <th>Employee</th><th>Date</th><th>Field</th><th>Proposed Value</th><th>Reason</th>
+        </tr></thead>
+        <tbody id="admin-requests-body">
+          <tr class="nr"><td colspan="5">No pending requests at the moment.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="ad-hdr">
       <h2>Attendance Records</h2>
       <p>Taiwan Operations · All employee data — synced to Google Sheets</p>
@@ -390,6 +441,7 @@ const GMAIL = "https://gmailmcp.googleapis.com/mcp/v1";
 let U = null, MODE = "Office", BUSY = false;
 let records = [];
 let fFrom="", fTo="", fMode="", afPerson="", afFrom="", afTo="", afMode="";
+let editDateContext = "";
 
 // ── Helpers ──
 const getTW  = () => { const u=Date.now()+new Date().getTimezoneOffset()*60000; return new Date(u+8*3600000); };
@@ -424,15 +476,10 @@ async function pushToSheet(rec){
   try{
     const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
-      // Notice that headers and mode:"no-cors" are removed
       body: JSON.stringify({action: "upsert", record: rec})
     });
-    
-    if (response.ok) {
-      setSyncBadge("ok");
-    } else {
-      setSyncBadge("err");
-    }
+    if (response.ok) setSyncBadge("ok");
+    else setSyncBadge("err");
   } catch(e){ 
     setSyncBadge("err"); 
   }
@@ -460,7 +507,6 @@ async function fetchUserRecords(){
     const r = await fetch(`${APPS_SCRIPT_URL}?action=getByEmail&email=${encodeURIComponent(U.email)}`);
     const data = await r.json();
     const myRecs = Array.isArray(data) ? data : [];
-    // merge with local cache keeping user's records fresh
     const otherRecs = loadLocal().filter(x => x.email !== U.email);
     records = [...otherRecs, ...myRecs];
     saveLocal(records);
@@ -479,7 +525,7 @@ const todayRec = () => {
 };
 
 // ── Views ──
-const VIEWS = ["v-login", "v-home", "v-admin-login", "v-admin-dash"];
+const VIEWS = ["v-login","v-home","v-admin-login","v-admin-dash"];
 const show = v => { 
   VIEWS.forEach(id => document.getElementById(id).style.display = "none"); 
   document.getElementById(v).style.display = (v === "v-login" || v === "v-admin-login") ? "flex" : "block"; 
@@ -540,25 +586,22 @@ function renderButtons(){
   const rec=todayRec(), hasIn=rec&&rec.clockIn, hasOut=rec&&rec.clockOut;
   const btnIn=document.getElementById("btn-in"), btnOut=document.getElementById("btn-out");
   const note=document.getElementById("ac-note");
-  const mcBtns=document.querySelectorAll(".mc-btn"); // Get location buttons
+  const mcBtns=document.querySelectorAll(".mc-btn");
 
   if(hasIn&&!hasOut){
     btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
     btnOut.className="ac-btn ac-out"; btnOut.disabled=false;
     note.textContent="Clocked in at "+rec.clockInDisplay;
-    // Disable location buttons
     mcBtns.forEach(b => { b.disabled = true; b.style.opacity = b.classList.contains("active") ? "1" : "0.4"; b.style.cursor = "not-allowed"; });
   } else if(hasOut){
     btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
     btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
     note.textContent="Day complete — have a great evening!";
-    // Disable location buttons
     mcBtns.forEach(b => { b.disabled = true; b.style.opacity = b.classList.contains("active") ? "1" : "0.4"; b.style.cursor = "not-allowed"; });
   } else {
     btnIn.className="ac-btn ac-in"; btnIn.disabled=false;
     btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
     note.textContent="";
-    // Enable location buttons
     mcBtns.forEach(b => { b.disabled = false; b.style.opacity = "1"; b.style.cursor = "pointer"; });
   }
 }
@@ -587,7 +630,11 @@ function renderHistTable(){
   tbody.innerHTML=[...data].reverse().map(r=>{
     const isToday=r.date===dKey(getTW());
     return`<tr>
-      <td style="font-weight:700">${dDisp(r.date)}${isToday?` <span style="font-size:10px;background:var(--or-lt);color:var(--or);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:4px">Today</span>`:""}</td>
+      <td style="font-weight:700">
+        ${dDisp(r.date)}
+        ${isToday?` <span style="font-size:10px;background:var(--or-lt);color:var(--or);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:4px">Today</span>`:""}
+        <button onclick="openEditModal('${r.date}')" style="background:none;border:none;color:var(--pu);font-size:11px;font-weight:700;margin-left:8px;cursor:pointer;text-decoration:underline;">Edit</button>
+      </td>
       <td style="color:var(--or);font-weight:700;font-family:Outfit,sans-serif">${r.clockInDisplay||"—"}</td>
       <td style="font-weight:700;font-family:Outfit,sans-serif">${r.clockOutDisplay||`<span style="color:#bbb;font-style:italic;font-size:12px;font-family:DM Sans">In progress</span>`}</td>
       <td style="color:var(--pu);font-weight:700;font-family:Outfit,sans-serif">${r.duration||(r.clockIn&&!r.clockOut?`<span style="color:#bbb;font-style:italic;font-size:12px;font-family:DM Sans">Ongoing</span>`:"—")}</td>
@@ -596,27 +643,52 @@ function renderHistTable(){
   }).join("");
 }
 
-// ── Email ──
-async function sendEmail(type,data){
-  const isIn=type==="in",clr=isIn?"#FF5537":"#252729";
-  const subj=`[FUNNOW Group] ${isIn?"Clock-In":"Clock-Out"} Confirmed — ${data.date}`;
-  const rows=isIn
-    ?`<tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Date</td><td style="padding:11px 16px;font-weight:700">${data.date}</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock In</td><td style="padding:11px 16px;font-weight:700;color:#FF5537">${data.clockIn} (Taiwan Time)</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px">Work Location</td><td style="padding:11px 16px;font-weight:700">${data.workMode}</td></tr>`
-    :`<tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Date</td><td style="padding:11px 16px;font-weight:700">${data.date}</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock In</td><td style="padding:11px 16px;font-weight:700">${data.clockIn}</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Clock Out</td><td style="padding:11px 16px;font-weight:700;color:#FF5537">${data.clockOut}</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px;border-bottom:1px solid #f0f0f0">Total Hours</td><td style="padding:11px 16px;font-weight:700;color:#16A34A">${data.duration}</td></tr>
-       <tr><td style="padding:11px 16px;color:#999;font-size:13px">Work Location</td><td style="padding:11px 16px;font-weight:700">${data.workMode}</td></tr>`;
-  const html=`<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto"><div style="background:${clr};border-radius:14px 14px 0 0;padding:24px 30px"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">FUNNOW Group · Attendance</div><h1 style="margin:0;color:#fff;font-size:20px;font-weight:900">${isIn?"Clock-In Confirmed":"Clock-Out Confirmed"}</h1></div><div style="background:#fafafa;padding:24px 30px;border-radius:0 0 14px 14px;border:1px solid #eee;border-top:none"><p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.65">Hi ${data.name}, your attendance record has been saved.</p><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:9px;overflow:hidden;border:1px solid #eee">${rows}</table><p style="margin:16px 0 0;font-size:11px;color:#ccc">Automated message · FUNNOW Group Attendance System</p></div></div>`;
-  try{
-    await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:500,
-        mcp_servers:[{type:"url",url:GMAIL,name:"gmail"}],
-        messages:[{role:"user",content:`Send an email to ${U.email} with subject "${subj}" and this HTML body:\n${html}`}]})});
-  } catch(e){ console.warn("Email skipped:",e); }
-}
+// ── Edit Request Modal ──
+window.openEditModal = function(date) {
+  editDateContext = date;
+  document.getElementById("edit-modal").style.display = "flex";
+  document.getElementById("edit-value").value = "";
+  document.getElementById("edit-reason").value = "";
+};
+
+window.closeEditModal = function() {
+  document.getElementById("edit-modal").style.display = "none";
+};
+
+document.getElementById("submit-edit-btn").addEventListener("click", async () => {
+  const field = document.getElementById("edit-field").value;
+  const val = document.getElementById("edit-value").value.trim();
+  const reason = document.getElementById("edit-reason").value.trim();
+  
+  if(!val) return toast("Please enter a proposed value", "error");
+  if(!reason) return toast("Please provide a reason", "error");
+
+  const requestPayload = {
+    action: "requestEdit",
+    email: U.email,
+    name: U.name,
+    date: editDateContext,
+    field: field,
+    value: val,
+    reason: reason
+  };
+
+  const btn = document.getElementById("submit-edit-btn");
+  btn.textContent = "Sending..."; btn.disabled = true;
+  
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(requestPayload)
+    });
+    toast("Request sent to Admin!", "success");
+  } catch(e) {
+    toast("Error sending request.", "warning");
+  }
+
+  closeEditModal();
+  btn.textContent = "Send Request"; btn.disabled = false;
+});
 
 // ── Clock In ──
 async function doClockIn(){
@@ -633,7 +705,6 @@ async function doClockIn(){
   records = records.filter(r=>!(r.email===U.email&&r.date===today));
   records.push(newRec); saveLocal(records);
   await pushToSheet(newRec);
-  await sendEmail("in",{name:U.name,date:dDisp(today),clockIn:t,workMode:MODE});
   BUSY=false; document.getElementById("btn-in").textContent="Clock In";
   toast("Clocked in at "+t,"success"); renderHome();
 }
@@ -652,7 +723,6 @@ async function doClockOut(){
   records[idx]={...records[idx],clockOut:new Date().toISOString(),clockOutDisplay:t,duration:d};
   saveLocal(records);
   await pushToSheet(records[idx]);
-  await sendEmail("out",{name:U.name,date:dDisp(today),clockIn:rec.clockInDisplay,clockOut:t,duration:d,workMode:rec.workMode});
   BUSY=false; document.getElementById("btn-out").textContent="Clock Out";
   toast("Clocked out at "+t+" · "+d,"success"); renderHome();
 }
@@ -675,21 +745,24 @@ async function renderAdmin(){
   document.getElementById("s-done").textContent = records.filter(r=>r.date===today&&r.clockOut).length;
   document.getElementById("s-show").textContent = filt.length;
   document.getElementById("af-clr").style.display=(afPerson||afFrom||afTo||afMode)?"block":"none";
+  
   const tbody=document.getElementById("ad-body");
-  if(!filt.length){ tbody.innerHTML="<tr class='nr'><td colspan='8'>No records found</td></tr>"; return; }
-  tbody.innerHTML=[...filt].reverse().map(r=>{
-    const st=r.clockOut?`<span class="pill p-ok">Complete</span>`:`<span class="pill p-pr">In Progress</span>`;
-    return`<tr>
-      <td style="font-weight:700">${r.name}</td>
-      <td style="color:#999;font-size:12px">${r.email}</td>
-      <td>${dDisp(r.date)}</td>
-      <td style="color:var(--or);font-weight:700;font-family:Outfit,sans-serif">${r.clockInDisplay||"—"}</td>
-      <td style="font-weight:700;font-family:Outfit,sans-serif">${r.clockOutDisplay||"—"}</td>
-      <td style="color:var(--pu);font-weight:700;font-family:Outfit,sans-serif">${r.duration||"—"}</td>
-      <td style="font-size:12px;font-weight:600;color:#666">${r.workMode||"—"}</td>
-      <td>${st}</td>
-    </tr>`;
-  }).join("");
+  if(!filt.length){ tbody.innerHTML="<tr class='nr'><td colspan='8'>No records found</td></tr>"; }
+  else {
+    tbody.innerHTML=[...filt].reverse().map(r=>{
+      const st=r.clockOut?`<span class="pill p-ok">Complete</span>`:`<span class="pill p-pr">In Progress</span>`;
+      return`<tr>
+        <td style="font-weight:700">${r.name}</td>
+        <td style="color:#999;font-size:12px">${r.email}</td>
+        <td>${dDisp(r.date)}</td>
+        <td style="color:var(--or);font-weight:700;font-family:Outfit,sans-serif">${r.clockInDisplay||"—"}</td>
+        <td style="font-weight:700;font-family:Outfit,sans-serif">${r.clockOutDisplay||"—"}</td>
+        <td style="color:var(--pu);font-weight:700;font-family:Outfit,sans-serif">${r.duration||"—"}</td>
+        <td style="font-size:12px;font-weight:600;color:#666">${r.workMode||"—"}</td>
+        <td>${st}</td>
+      </tr>`;
+    }).join("");
+  }
 }
 
 function exportCSV(scope){
@@ -715,9 +788,10 @@ document.getElementById("l-btn").addEventListener("click",()=>{
 document.getElementById("le").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("l-btn").click();});
 document.getElementById("l-admin-btn").addEventListener("click", () => show("v-admin-login"));
 document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; show("v-login"); });
+
 document.getElementById("mc-btns").addEventListener("click", e => {
   const btn = e.target.closest(".mc-btn"); 
-  if(!btn || btn.disabled) return; // Prevent clicks if disabled
+  if(!btn || btn.disabled) return; 
   document.querySelectorAll(".mc-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active"); MODE=btn.dataset.mode;
 });
@@ -731,14 +805,14 @@ document.getElementById("f-mode").addEventListener("change",e=>{ fMode=e.target.
 document.getElementById("f-clr").addEventListener("click",()=>{ fFrom=fTo=fMode=""; document.getElementById("f-from").value=""; document.getElementById("f-to").value=""; document.getElementById("f-mode").value=""; renderHistTable(); });
 
 // Admin login
-document.getElementById("al-back").addEventListener("click",()=>show("v-login"));
+document.getElementById("al-back").addEventListener("click",()=>show("v-login")); // Fixed 'Back to Portal' link
 document.getElementById("al-enter").addEventListener("click",()=>{
   const pwd=document.getElementById("al-pwd").value;
   if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); }
   else{ document.getElementById("al-err").textContent="Incorrect password."; }
 });
 document.getElementById("al-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("al-enter").click();});
-document.getElementById("ad-back").addEventListener("click",()=>show("v-home"));
+document.getElementById("ad-back").addEventListener("click",()=>show("v-login")); // Fixed 'Back to Portal' link
 
 // Admin filters
 document.getElementById("af-person").addEventListener("change",e=>{ afPerson=e.target.value; renderAdmin(); });
