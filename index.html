@@ -38,6 +38,11 @@ body{background:var(--gy-lt);min-height:100vh}
 .gb-or{background:var(--or);color:#fff}
 .gb-or:hover{background:var(--or-h)}
 
+/* INBOX & BADGES */
+.inbox-btn { position: relative; font-size: 16px; padding: 6px 10px !important; display: flex; align-items: center; justify-content: center; }
+.badge { background: var(--rd); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; font-family: "Outfit", sans-serif; }
+.inbox-btn .badge { position: absolute; top: -6px; right: -6px; border: 2px solid var(--bk2); }
+
 /* LOGIN SPLIT */
 #v-login,#v-admin-login{min-height:100vh}
 .l-left{flex:1;background:var(--or);display:flex;flex-direction:column;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
@@ -126,12 +131,17 @@ tbody tr:last-child{border-bottom:none}
 tbody td{padding:13px 16px;font-size:13px}
 .nr td{padding:48px;text-align:center;color:var(--gy);font-style:italic}
 
-/* ADMIN DASHBOARD SPECIFIC */
+/* ADMIN DASHBOARD TABS */
 #v-admin-dash{display:none}
 .ad-body{max-width:1140px;margin:0 auto;padding:28px 24px 60px}
-.ad-hdr{margin-bottom:22px}
-.ad-hdr h2{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;letter-spacing:-.5px}
-.ad-hdr p{color:#999;font-size:13px;margin-top:3px}
+.ad-tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid var(--gy-md); padding-bottom: 12px; overflow-x: auto; }
+.ad-tab { background: none; border: none; font-family: "Outfit", sans-serif; font-size: 15px; font-weight: 700; color: #888; cursor: pointer; padding: 10px 16px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.ad-tab:hover { background: var(--gy-lt); color: var(--bk); }
+.ad-tab.active { background: var(--bk); color: #fff; }
+.ad-tab-content { display: none; animation: fadeIn 0.3s ease; }
+.ad-tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .st{background:#fff;border-radius:13px;padding:18px 22px;border:1px solid rgba(0,0,0,.05)}
 .st-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#bbb;margin-bottom:6px}
@@ -153,7 +163,6 @@ tbody td{padding:13px 16px;font-size:13px}
 
 /* TOAST */
 #toast{display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:11px 22px;border-radius:50px;font-weight:700;font-size:13px;z-index:9999;white-space:nowrap;color:#fff;animation:fu .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
-@keyframes fu{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 /* EDIT REQUEST MODAL */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9000; justify-content: center; align-items: center; }
@@ -230,7 +239,12 @@ tbody td{padding:13px 16px;font-size:13px}
     <div class="nav-r">
       <span class="nav-nm" id="nav-nm"></span>
       <div class="nav-av" id="nav-av">?</div>
+      
+      <button class="gb gb-ol inbox-btn" id="h-inbox-nav" style="display:none;" title="Pending Requests">
+        📥 <span class="badge" id="nav-req-badge" style="display:none;">0</span>
+      </button>
       <button class="gb gb-ol" id="h-admin-nav" style="display:none; color: var(--pu); border-color: rgba(99, 102, 241, 0.4);">Admin Dashboard</button>
+      
       <button class="gb gb-ol" id="h-out">Sign Out</button>
     </div>
   </div>
@@ -373,76 +387,79 @@ tbody td{padding:13px 16px;font-size:13px}
   </div>
   <div class="ad-body">
     
-    <div class="ad-hdr" style="margin-bottom: 16px;">
-      <h2>Pending Edit Requests</h2>
-      <p>Requests requiring admin approval</p>
-    </div>
-    <div class="hw" style="margin-bottom: 32px;">
-      <table>
-        <thead><tr>
-          <th>Employee</th><th>Date</th><th>Field</th><th>Proposed Value</th><th>Reason</th><th>Actions</th>
-        </tr></thead>
-        <tbody id="admin-requests-body">
-          <tr class="nr"><td colspan="6">No pending requests at the moment.</td></tr>
-        </tbody>
-      </table>
+    <div class="ad-tabs">
+      <button class="ad-tab active" id="btn-tab-records" onclick="switchAdTab('records')">Attendance Records</button>
+      <button class="ad-tab" id="btn-tab-requests" onclick="switchAdTab('requests')">
+        Inbox & Requests <span class="badge" id="tab-req-badge" style="display:none; margin-left: 4px;">0</span>
+      </button>
+      <button class="ad-tab" id="btn-tab-roles" onclick="switchAdTab('roles')">Admin Roles</button>
     </div>
 
-    <div class="ad-hdr">
-      <h2>Attendance Records</h2>
-      <p>Taiwan Operations · All employee data — synced to Google Sheets</p>
-    </div>
-    <div class="stats-row">
-      <div class="st"><div class="st-lbl">Total Records</div><div class="st-n" id="s-tot" style="color:var(--or)">0</div><div class="st-s">All time</div></div>
-      <div class="st"><div class="st-lbl">Clocked In Today</div><div class="st-n" id="s-in" style="color:var(--pu)">0</div><div class="st-s">Active</div></div>
-      <div class="st"><div class="st-lbl">Completed Today</div><div class="st-n" id="s-done" style="color:var(--ok)">0</div><div class="st-s">Clocked out</div></div>
-      <div class="st"><div class="st-lbl">Showing</div><div class="st-n" id="s-show" style="color:var(--bk)">0</div><div class="st-s">Current view</div></div>
-    </div>
-    <div class="filter-row">
-      <select id="af-person" class="fi2"><option value="">All Employees</option></select>
-      <input type="date" id="af-from" class="fi2" title="From">
-      <span style="color:#bbb;font-size:12px">to</span>
-      <input type="date" id="af-to" class="fi2" title="To">
-      <select id="af-mode" class="fi2">
-        <option value="">All Locations</option>
-        <option value="Office">Office</option>
-        <option value="Work from Home">Work from Home</option>
-        <option value="Business Trip">Business Trip</option>
-      </select>
-      <button class="clr-btn" id="af-clr" style="display:none">Clear filters</button>
-      <button class="exp-btn" style="margin-left:auto" id="ad-exp">Export CSV</button>
-    </div>
-    <div class="hw" style="margin-bottom: 32px;">
-      <table>
-        <colgroup>
-          <col style="width:12%"><col style="width:17%"><col style="width:12%">
-          <col style="width:10%"><col style="width:10%"><col style="width:9%">
-          <col style="width:14%"><col style="width:8%">
-        </colgroup>
-        <thead><tr>
-          <th>Name</th><th>Email</th><th>Date</th>
-          <th>Clock In</th><th>Clock Out</th><th>Total Hours</th>
-          <th>Work Location</th><th>Status</th>
-        </tr></thead>
-        <tbody id="ad-body"><tr class="nr"><td colspan="8">No records yet</td></tr></tbody>
-      </table>
-    </div>
-
-    <div class="ad-hdr" style="margin-bottom: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--gy-md);">
-      <h2>Admin Role Management</h2>
-      <p>Authorized admins can access this dashboard via the Employee Portal without needing the master password.</p>
-    </div>
-    <div class="hw" style="padding: 24px;">
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
-        <input type="text" id="new-admin-email" class="fi" placeholder="hr.manager@funnow.com" style="max-width: 320px; margin-bottom: 0;">
-        <button class="btn-submit" onclick="addAdminRole()">Grant Admin Access</button>
+    <div id="tab-records" class="ad-tab-content active">
+      <div class="stats-row">
+        <div class="st"><div class="st-lbl">Total Records</div><div class="st-n" id="s-tot" style="color:var(--or)">0</div><div class="st-s">All time</div></div>
+        <div class="st"><div class="st-lbl">Clocked In Today</div><div class="st-n" id="s-in" style="color:var(--pu)">0</div><div class="st-s">Active</div></div>
+        <div class="st"><div class="st-lbl">Completed Today</div><div class="st-n" id="s-done" style="color:var(--ok)">0</div><div class="st-s">Clocked out</div></div>
+        <div class="st"><div class="st-lbl">Showing</div><div class="st-n" id="s-show" style="color:var(--bk)">0</div><div class="st-s">Current view</div></div>
       </div>
-      <table style="max-width: 600px; border: 1px solid var(--gy-lt); border-radius: 8px;">
-        <thead><tr><th>Authorized Admin Email</th><th style="text-align:right">Action</th></tr></thead>
-        <tbody id="admin-list-body">
-          <tr class="nr"><td colspan="2">Loading admins...</td></tr>
-        </tbody>
-      </table>
+      <div class="filter-row">
+        <select id="af-person" class="fi2"><option value="">All Employees</option></select>
+        <input type="date" id="af-from" class="fi2" title="From">
+        <span style="color:#bbb;font-size:12px">to</span>
+        <input type="date" id="af-to" class="fi2" title="To">
+        <select id="af-mode" class="fi2">
+          <option value="">All Locations</option>
+          <option value="Office">Office</option>
+          <option value="Work from Home">Work from Home</option>
+          <option value="Business Trip">Business Trip</option>
+        </select>
+        <button class="clr-btn" id="af-clr" style="display:none">Clear filters</button>
+        <button class="exp-btn" style="margin-left:auto" id="ad-exp">Export CSV</button>
+      </div>
+      <div class="hw" style="margin-bottom: 32px;">
+        <table>
+          <colgroup>
+            <col style="width:12%"><col style="width:17%"><col style="width:12%">
+            <col style="width:10%"><col style="width:10%"><col style="width:9%">
+            <col style="width:14%"><col style="width:8%">
+          </colgroup>
+          <thead><tr>
+            <th>Name</th><th>Email</th><th>Date</th>
+            <th>Clock In</th><th>Clock Out</th><th>Total Hours</th>
+            <th>Work Location</th><th>Status</th>
+          </tr></thead>
+          <tbody id="ad-body"><tr class="nr"><td colspan="8">No records yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-requests" class="ad-tab-content">
+      <div class="hw" style="margin-bottom: 32px;">
+        <table>
+          <thead><tr>
+            <th>Employee</th><th>Date</th><th>Field</th><th>Proposed Value</th><th>Reason</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="admin-requests-body">
+            <tr class="nr"><td colspan="6">No pending requests at the moment.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-roles" class="ad-tab-content">
+      <div class="hw" style="padding: 24px;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Authorized admins can access this dashboard directly via the Employee Portal without needing the master password.</p>
+        <div style="display: flex; gap: 10px; margin-bottom: 24px; align-items: center;">
+          <input type="text" id="new-admin-email" class="fi" placeholder="hr.manager@funnow.com" style="max-width: 320px; margin-bottom: 0;">
+          <button class="btn-submit" onclick="addAdminRole()">Grant Admin Access</button>
+        </div>
+        <table style="max-width: 600px; border: 1px solid var(--gy-lt); border-radius: 8px;">
+          <thead><tr><th>Authorized Admin Email</th><th style="text-align:right">Action</th></tr></thead>
+          <tbody id="admin-list-body">
+            <tr class="nr"><td colspan="2">Loading admins...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -492,7 +509,7 @@ function setSyncBadge(state){
   else { b.classList.add("sync-ing"); b.textContent="Syncing..."; }
 }
 
-// Fetch list of authorized Admins
+// Fetch list of authorized Admins and trigger inbox badges
 async function fetchAdmins() {
   if(!SHEETS_READY) return;
   try {
@@ -500,12 +517,31 @@ async function fetchAdmins() {
     adminEmails = await r.json();
   } catch(e) { console.warn("Could not fetch admins", e); }
   
-  // Show bypass button if current user is admin
   if (U && adminEmails.includes(U.email.toLowerCase())) {
     document.getElementById("h-admin-nav").style.display = "inline-block";
+    document.getElementById("h-inbox-nav").style.display = "flex";
+    checkPendingRequests(); // Immediately check for notifications
   } else {
     document.getElementById("h-admin-nav").style.display = "none";
+    document.getElementById("h-inbox-nav").style.display = "none";
   }
+}
+
+// Fetch only the count of pending requests to update the notification badges
+async function checkPendingRequests() {
+  try {
+    const reqRes = await fetch(APPS_SCRIPT_URL + "?action=getRequests");
+    const pendingReqs = await reqRes.json();
+    const count = pendingReqs.length || 0;
+    
+    const badges = [document.getElementById("nav-req-badge"), document.getElementById("tab-req-badge")];
+    badges.forEach(b => {
+      if (b) {
+        b.textContent = count;
+        b.style.display = count > 0 ? "inline-block" : "none";
+      }
+    });
+  } catch(e) {}
 }
 
 async function pushToSheet(rec){
@@ -562,11 +598,20 @@ const todayRec = () => {
   return records.find(r => r.email===U.email && r.date===t) || null;
 };
 
-// ── Views ──
+// ── Views & Tabs ──
 const VIEWS = ["v-login","v-home","v-admin-login","v-admin-dash"];
 const show = v => { 
   VIEWS.forEach(id => document.getElementById(id).style.display = "none"); 
   document.getElementById(v).style.display = (v === "v-login" || v === "v-admin-login") ? "flex" : "block"; 
+};
+
+window.switchAdTab = function(tabId) {
+  // Hide all tab content & remove active state
+  document.querySelectorAll('.ad-tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.ad-tab').forEach(el => el.classList.remove('active'));
+  // Activate selected tab
+  document.getElementById('tab-' + tabId).classList.add('active');
+  document.getElementById('btn-tab-' + tabId).classList.add('active');
 };
 
 let TT;
@@ -601,7 +646,7 @@ function loginUser(email, name, photo){
   records = loadLocal();
   renderHome();
   fetchUserRecords();
-  fetchAdmins(); // Check if this person gets the direct Admin button
+  fetchAdmins(); // Check if this person gets the direct Admin buttons
 }
 
 // ── Clock ──
@@ -759,7 +804,7 @@ window.handleReqAction = async function(reqId, actionType) {
   try {
     await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: actionType, reqId: reqId }) });
     toast(`Request processed!`, "success");
-    setTimeout(() => renderAdmin(), 1000);
+    setTimeout(() => { renderAdmin(); checkPendingRequests(); }, 1000);
   } catch(e) { toast("Error processing request.", "error"); }
 };
 
@@ -770,7 +815,7 @@ window.addAdminRole = async function() {
   if(adminEmails.includes(email)) return toast("Already an admin", "warning");
 
   toast("Adding admin...", "warning");
-  adminEmails.push(email); // Optimistic update
+  adminEmails.push(email); 
   renderAdminList();
   document.getElementById("new-admin-email").value = "";
   
@@ -784,7 +829,7 @@ window.addAdminRole = async function() {
 window.removeAdminRole = async function(email) {
   if(!confirm(`Remove admin privileges for ${email}?`)) return;
   toast("Removing admin...", "warning");
-  adminEmails = adminEmails.filter(e => e !== email); // Optimistic update
+  adminEmails = adminEmails.filter(e => e !== email); 
   renderAdminList();
   
   try {
@@ -813,7 +858,7 @@ function renderAdminList() {
 // ── Admin render ──
 async function renderAdmin(){
   await fetchFromSheet();
-  await fetchAdmins(); // Make sure admin list is fresh
+  await fetchAdmins(); 
   renderAdminList();
 
   const today=dKey(getTW());
@@ -856,6 +901,12 @@ async function renderAdmin(){
   try {
     const reqRes = await fetch(APPS_SCRIPT_URL + "?action=getRequests");
     const pendingReqs = await reqRes.json();
+    
+    // Update notification badges dynamically
+    const count = pendingReqs.length || 0;
+    const badges = [document.getElementById("nav-req-badge"), document.getElementById("tab-req-badge")];
+    badges.forEach(b => { if(b) { b.textContent = count; b.style.display = count > 0 ? "inline-block" : "none"; } });
+
     if(!pendingReqs || !pendingReqs.length) {
       reqBody.innerHTML = "<tr class='nr'><td colspan='6'>No pending requests at the moment.</td></tr>";
     } else {
@@ -900,12 +951,24 @@ document.getElementById("l-btn").addEventListener("click",()=>{
 });
 document.getElementById("le").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("l-btn").click();});
 document.getElementById("l-admin-btn").addEventListener("click", () => show("v-admin-login"));
-document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; document.getElementById("h-admin-nav").style.display="none"; show("v-login"); });
+document.getElementById("h-out").addEventListener("click",()=>{ 
+  U=null; records=[]; document.getElementById("le").value=""; 
+  document.getElementById("h-admin-nav").style.display="none"; 
+  document.getElementById("h-inbox-nav").style.display="none"; 
+  show("v-login"); 
+});
 
-// NEW: Quick access button for authorized admins
+// QUICK ACCESS BUTTONS (Top Nav)
 document.getElementById("h-admin-nav").addEventListener("click", () => {
   show("v-admin-dash");
   renderAdmin();
+  switchAdTab('records'); // Default to records
+});
+
+document.getElementById("h-inbox-nav").addEventListener("click", () => {
+  show("v-admin-dash");
+  renderAdmin();
+  switchAdTab('requests'); // Auto-switch to requests tab!
 });
 
 document.getElementById("mc-btns").addEventListener("click", e => {
@@ -927,12 +990,11 @@ document.getElementById("f-clr").addEventListener("click",()=>{ fFrom=fTo=fMode=
 document.getElementById("al-back").addEventListener("click",()=>show("v-login")); 
 document.getElementById("al-enter").addEventListener("click",()=>{
   const pwd=document.getElementById("al-pwd").value;
-  if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); }
+  if(pwd===PWD){ document.getElementById("al-pwd").value=""; document.getElementById("al-err").textContent=""; show("v-admin-dash"); renderAdmin(); switchAdTab('records'); }
   else{ document.getElementById("al-err").textContent="Incorrect password."; }
 });
 document.getElementById("al-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("al-enter").click();});
 document.getElementById("ad-back").addEventListener("click",()=>{
-  // If user is actually logged into an account, return to home, else return to login screen
   if(U) show("v-home"); else show("v-login");
 }); 
 
