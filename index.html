@@ -201,7 +201,7 @@ tbody td{padding:13px 16px;font-size:13px}
     <input type="text" id="le" class="fi" placeholder="yourname@funnow.com">
     <div class="fe" id="le-err2"></div>
     <button class="pb" id="l-btn" style="margin-top:10px">Continue</button>
-    <div class="info-b" style="margin-top:14px"><strong>Admin?</strong> Sign in as usual, then tap the <strong>Admin</strong> button in the top-right corner.</div>
+    <div class="divd"><span>or</span></div> <button class="pb gb-ol" id="l-admin-btn" style="color:#555; border:1.5px solid var(--gy-md); background:#fff;">Go to Admin Portal</button>
   </div>
 </div>
 
@@ -216,7 +216,6 @@ tbody td{padding:13px 16px;font-size:13px}
     <div class="nav-r">
       <span class="nav-nm" id="nav-nm"></span>
       <div class="nav-av" id="nav-av">?</div>
-      <button class="gb gb-ol" id="h-admin">Admin</button>
       <button class="gb gb-ol" id="h-out">Sign Out</button>
     </div>
   </div>
@@ -532,18 +531,26 @@ function renderButtons(){
   const rec=todayRec(), hasIn=rec&&rec.clockIn, hasOut=rec&&rec.clockOut;
   const btnIn=document.getElementById("btn-in"), btnOut=document.getElementById("btn-out");
   const note=document.getElementById("ac-note");
+  const mcBtns=document.querySelectorAll(".mc-btn"); // Get location buttons
+
   if(hasIn&&!hasOut){
     btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
     btnOut.className="ac-btn ac-out"; btnOut.disabled=false;
     note.textContent="Clocked in at "+rec.clockInDisplay;
+    // Disable location buttons
+    mcBtns.forEach(b => { b.disabled = true; b.style.opacity = b.classList.contains("active") ? "1" : "0.4"; b.style.cursor = "not-allowed"; });
   } else if(hasOut){
     btnIn.className="ac-btn ac-dis"; btnIn.disabled=true;
     btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
     note.textContent="Day complete — have a great evening!";
+    // Disable location buttons
+    mcBtns.forEach(b => { b.disabled = true; b.style.opacity = b.classList.contains("active") ? "1" : "0.4"; b.style.cursor = "not-allowed"; });
   } else {
     btnIn.className="ac-btn ac-in"; btnIn.disabled=false;
     btnOut.className="ac-btn ac-dis"; btnOut.disabled=true;
     note.textContent="";
+    // Enable location buttons
+    mcBtns.forEach(b => { b.disabled = false; b.style.opacity = "1"; b.style.cursor = "pointer"; });
   }
 }
 
@@ -697,11 +704,12 @@ document.getElementById("l-btn").addEventListener("click",()=>{
   err.textContent=""; loginUser(email,nameF(email),null);
 });
 document.getElementById("le").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("l-btn").click();});
-document.getElementById("h-admin").addEventListener("click",()=>show("v-admin-login"));
+document.getElementById("l-admin-btn").addEventListener("click", () => show("v-admin-login"));
 document.getElementById("h-out").addEventListener("click",()=>{ U=null; records=[]; document.getElementById("le").value=""; show("v-login"); });
-document.getElementById("mc-btns").addEventListener("click",e=>{
-  const btn=e.target.closest(".mc-btn"); if(!btn) return;
-  document.querySelectorAll(".mc-btn").forEach(b=>b.classList.remove("active"));
+document.getElementById("mc-btns").addEventListener("click", e => {
+  const btn = e.target.closest(".mc-btn"); 
+  if(!btn || btn.disabled) return; // Prevent clicks if disabled
+  document.querySelectorAll(".mc-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active"); MODE=btn.dataset.mode;
 });
 document.getElementById("btn-in").addEventListener("click",doClockIn);
