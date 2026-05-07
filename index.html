@@ -39,7 +39,7 @@ body{background:var(--gy-lt);min-height:100vh}
 .gb-or:hover{background:var(--or-h)}
 
 /* LOGIN SPLIT */
-#v-login,#v-admin-login{display:flex;min-height:100vh}
+#v-login,#v-admin-login{min-height:100vh}
 .l-left{flex:1;background:var(--or);display:flex;flex-direction:column;justify-content:center;padding:64px 56px;position:relative;overflow:hidden}
 .l-left.dk{background:var(--bk2)}
 .l-left::before{content:"";position:absolute;right:-80px;bottom:-80px;width:320px;height:320px;background:rgba(0,0,0,.12);border-radius:50%}
@@ -480,7 +480,10 @@ const todayRec = () => {
 
 // ── Views ──
 const VIEWS = ["v-login","v-home","v-admin-login","v-admin-dash"];
-const show  = v => { VIEWS.forEach(id=>document.getElementById(id).style.display="none"); document.getElementById(v).style.display="block"; };
+const show = v => { 
+  VIEWS.forEach(id => document.getElementById(id).style.display = "none"); 
+  document.getElementById(v).style.display = (v === "v-login" || v === "v-admin-login") ? "flex" : "block"; 
+};
 
 let TT;
 const toast = (msg,type="success") => {
