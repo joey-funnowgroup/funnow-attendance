@@ -479,7 +479,7 @@ const todayRec = () => {
 };
 
 // ── Views ──
-const VIEWS = ["v-login","v-home","v-admin-login","v-admin-dash"];
+const VIEWS = ["v-login", "v-home", "v-admin-login", "v-admin-dash"];
 const show = v => { 
   VIEWS.forEach(id => document.getElementById(id).style.display = "none"); 
   document.getElementById(v).style.display = (v === "v-login" || v === "v-admin-login") ? "flex" : "block"; 
