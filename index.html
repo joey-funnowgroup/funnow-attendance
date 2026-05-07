@@ -422,14 +422,20 @@ async function pushToSheet(rec){
   if(!SHEETS_READY){ setSyncBadge("err"); return; }
   setSyncBadge("ing");
   try{
-    await fetch(APPS_SCRIPT_URL, {
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"upsert", record: rec})
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      // Notice that headers and mode:"no-cors" are removed
+      body: JSON.stringify({action: "upsert", record: rec})
     });
-    setSyncBadge("ok");
-  } catch(e){ setSyncBadge("err"); }
+    
+    if (response.ok) {
+      setSyncBadge("ok");
+    } else {
+      setSyncBadge("err");
+    }
+  } catch(e){ 
+    setSyncBadge("err"); 
+  }
 }
 
 async function fetchFromSheet(){
