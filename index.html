@@ -478,7 +478,7 @@ const GMAIL = "https://gmailmcp.googleapis.com/mcp/v1";
 
 let U = null, MODE = "Office", BUSY = false;
 let records = [];
-let adminEmails = []; // Holds list of authorized admins
+let adminEmails = []; 
 let fFrom="", fTo="", fMode="", afPerson="", afFrom="", afTo="", afMode="";
 let editDateContext = "";
 
@@ -493,11 +493,9 @@ const dur    = (a,b) => { const ms=new Date(b)-new Date(a),h=Math.floor(ms/36000
 const nameF  = e => e.includes("@")?e.split("@")[0].replace(/[._]/g," ").replace(/\b\w/g,c=>c.toUpperCase()):"Admin";
 const inits  = n => n.split(" ").slice(0,2).map(p=>p[0]||"").join("").toUpperCase()||"?";
 
-// ── Local storage fallback ──
 const loadLocal = () => { try{ return JSON.parse(localStorage.getItem(LOCAL)||"[]"); }catch{ return []; } };
 const saveLocal = r => localStorage.setItem(LOCAL, JSON.stringify(r));
 
-// ── Google Sheets sync ──
 const SHEETS_READY = APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_URL_HERE";
 
 function setSyncBadge(state){
@@ -509,7 +507,21 @@ function setSyncBadge(state){
   else { b.classList.add("sync-ing"); b.textContent="Syncing..."; }
 }
 
-// Fetch list of authorized Admins and trigger inbox badges
+// Fixed API call helper (Bypasses CORS restrictions)
+async function apiPost(payload) {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (err) {
+    console.error("API Error: Make sure your Google Sheet headers are exact matches to the script.", err);
+    throw err;
+  }
+}
+
 async function fetchAdmins() {
   if(!SHEETS_READY) return;
   try {
@@ -520,14 +532,13 @@ async function fetchAdmins() {
   if (U && adminEmails.includes(U.email.toLowerCase())) {
     document.getElementById("h-admin-nav").style.display = "inline-block";
     document.getElementById("h-inbox-nav").style.display = "flex";
-    checkPendingRequests(); // Immediately check for notifications
+    checkPendingRequests(); 
   } else {
     document.getElementById("h-admin-nav").style.display = "none";
     document.getElementById("h-inbox-nav").style.display = "none";
   }
 }
 
-// Fetch only the count of pending requests to update the notification badges
 async function checkPendingRequests() {
   try {
     const reqRes = await fetch(APPS_SCRIPT_URL + "?action=getRequests");
@@ -548,11 +559,7 @@ async function pushToSheet(rec){
   if(!SHEETS_READY){ setSyncBadge("err"); return; }
   setSyncBadge("ing");
   try{
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({action: "upsert", record: rec})
-    });
+    await apiPost({action: "upsert", record: rec});
     setSyncBadge("ok");
   } catch(e){ 
     setSyncBadge("err"); 
@@ -606,10 +613,8 @@ const show = v => {
 };
 
 window.switchAdTab = function(tabId) {
-  // Hide all tab content & remove active state
   document.querySelectorAll('.ad-tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.ad-tab').forEach(el => el.classList.remove('active'));
-  // Activate selected tab
   document.getElementById('tab-' + tabId).classList.add('active');
   document.getElementById('btn-tab-' + tabId).classList.add('active');
 };
@@ -646,10 +651,9 @@ function loginUser(email, name, photo){
   records = loadLocal();
   renderHome();
   fetchUserRecords();
-  fetchAdmins(); // Check if this person gets the direct Admin buttons
+  fetchAdmins(); 
 }
 
-// ── Clock ──
 const tick = () => {
   const now = getTW();
   const ce=document.getElementById("clk"), de=document.getElementById("cld");
@@ -659,7 +663,6 @@ const tick = () => {
 };
 setInterval(tick,1000); tick();
 
-// ── Render home ──
 function renderHome(){
   renderButtons();
   renderTodayCard();
@@ -752,9 +755,11 @@ document.getElementById("submit-edit-btn").addEventListener("click", async () =>
   btn.textContent = "Sending..."; btn.disabled = true;
   
   try {
-    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(requestPayload) });
+    await apiPost(requestPayload);
     toast("Request sent to Admin!", "success");
-  } catch(e) { toast("Error sending request.", "warning"); }
+  } catch(e) { 
+    toast("Error sending request.", "warning"); 
+  }
 
   closeEditModal();
   btn.textContent = "Send Request"; btn.disabled = false;
@@ -802,7 +807,7 @@ window.handleReqAction = async function(reqId, actionType) {
   if(!confirm(`Are you sure you want to ${actionType === 'approveEdit' ? 'APPROVE' : 'REJECT'} this request?`)) return;
   toast("Processing...", "warning");
   try {
-    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: actionType, reqId: reqId }) });
+    await apiPost({ action: actionType, reqId: reqId });
     toast(`Request processed!`, "success");
     setTimeout(() => { renderAdmin(); checkPendingRequests(); }, 1000);
   } catch(e) { toast("Error processing request.", "error"); }
@@ -820,10 +825,10 @@ window.addAdminRole = async function() {
   document.getElementById("new-admin-email").value = "";
   
   try {
-    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action: "addAdmin", email: email}) });
+    await apiPost({action: "addAdmin", email: email});
     toast("Admin added successfully!", "success");
     fetchAdmins();
-  } catch(e) { toast("Error adding admin", "error"); }
+  } catch(e) { toast("Error adding admin.", "error"); }
 };
 
 window.removeAdminRole = async function(email) {
@@ -833,10 +838,10 @@ window.removeAdminRole = async function(email) {
   renderAdminList();
   
   try {
-    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action: "removeAdmin", email: email}) });
+    await apiPost({action: "removeAdmin", email: email});
     toast("Admin removed!", "success");
     fetchAdmins();
-  } catch(e) { toast("Error removing admin", "error"); }
+  } catch(e) { toast("Error removing admin.", "error"); }
 };
 
 function renderAdminList() {
@@ -877,7 +882,6 @@ async function renderAdmin(){
   document.getElementById("s-show").textContent = filt.length;
   document.getElementById("af-clr").style.display=(afPerson||afFrom||afTo||afMode)?"block":"none";
   
-  // Render Main Data Table
   const tbody=document.getElementById("ad-body");
   if(!filt.length){ tbody.innerHTML="<tr class='nr'><td colspan='8'>No records found</td></tr>"; }
   else {
@@ -896,13 +900,11 @@ async function renderAdmin(){
     }).join("");
   }
 
-  // Fetch & Render Pending Requests
   const reqBody = document.getElementById("admin-requests-body");
   try {
     const reqRes = await fetch(APPS_SCRIPT_URL + "?action=getRequests");
     const pendingReqs = await reqRes.json();
     
-    // Update notification badges dynamically
     const count = pendingReqs.length || 0;
     const badges = [document.getElementById("nav-req-badge"), document.getElementById("tab-req-badge")];
     badges.forEach(b => { if(b) { b.textContent = count; b.style.display = count > 0 ? "inline-block" : "none"; } });
@@ -925,7 +927,7 @@ async function renderAdmin(){
       `).join("");
     }
   } catch(e) {
-    reqBody.innerHTML = "<tr class='nr'><td colspan='6'>Error loading requests. Ensure script is deployed.</td></tr>";
+    reqBody.innerHTML = "<tr class='nr'><td colspan='6'>Error loading requests. Check console for details.</td></tr>";
   }
 }
 
