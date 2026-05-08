@@ -1,0 +1,18 @@
+/* ─────────────────────────────────────────────────────────────
+   tokens.css — Brand tokens & global reset
+   FUNNOW Group · TW Attendance
+   ───────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --or:    #FF5537;  --or-h:  #E8402A;  --or-lt: #FFF1EE;
+  --bk:    #252729;  --bk2:   #1A1C1E;
+  --gy:    #C1C1C2;  --gy-lt: #F5F5F5;  --gy-md: #E8E8E8;
+  --ok:    #16A34A;  --ok-lt: #DCFCE7;
+  --wn:    #D97706;  --wn-lt: #FEF3C7;
+  --pu:    #6366F1;  --pu-lt: #EEF2FF;
+  --rd:    #DC2626;
+}
