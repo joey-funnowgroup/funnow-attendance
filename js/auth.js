@@ -77,9 +77,10 @@ setInterval(() => {
 function signOutDueToIdle() {
   U = null;
   records = [];
+  IS_MASTER_ADMIN = false;
   clearSession();
   toast("Signed out due to inactivity. Please sign in again.", "warning");
-  if (typeof show === "function") show("v-login");
+  if (typeof goto === "function") goto("#/login");
   // Hide admin nav buttons in case they were visible
   const adm = document.getElementById("h-admin-nav");
   const inb = document.getElementById("h-inbox-nav");
@@ -99,7 +100,11 @@ window.handleGoogleLogin = function (response) {
   }
 };
 
-function loginUser(email, name, photo) {
+// loginUser establishes the user session.
+//   skipNav = true  → caller will route the user (used on page-load
+//                     session restore so the URL hash decides where).
+//   skipNav = false → we navigate to #/home (the default for fresh sign-ins).
+function loginUser(email, name, photo, skipNav) {
   U = { email, name: name || nameF(email), photo: photo || null };
 
   document.getElementById("nav-nm").textContent  = U.name;
@@ -116,9 +121,10 @@ function loginUser(email, name, photo) {
 
   saveSession();
 
-  show("v-home");
   records = loadLocal();
   renderHome();
   fetchUserRecords();
   fetchAdmins();
+
+  if (!skipNav) goto("#/home");
 }

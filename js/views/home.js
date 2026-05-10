@@ -266,23 +266,20 @@ async function doClockOut() {
 document.getElementById("h-out").addEventListener("click", () => {
   U = null;
   records = [];
+  IS_MASTER_ADMIN = false;
   if (typeof clearSession === "function") clearSession();
   document.getElementById("le").value = "";
   document.getElementById("h-admin-nav").style.display = "none";
   document.getElementById("h-inbox-nav").style.display = "none";
-  show("v-login");
+  goto("#/login");
 });
 
 document.getElementById("h-admin-nav").addEventListener("click", () => {
-  show("v-admin-dash");
-  renderAdmin();
-  switchAdTab("records");
+  goto("#/admin/records");
 });
 
 document.getElementById("h-inbox-nav").addEventListener("click", () => {
-  show("v-admin-dash");
-  renderAdmin();
-  switchAdTab("requests");
+  goto("#/admin/inbox");
 });
 
 // ── Mode picker ──

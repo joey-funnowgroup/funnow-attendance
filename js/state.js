@@ -12,6 +12,11 @@ let BUSY = false;      // True while a clock-in/out network call is in flight
 let records = [];      // All in-memory attendance records
 let adminEmails = [];  // Admins whitelist (lowercase emails)
 
+// Master-password admin session flag (in-memory only — does not persist
+// across page refresh, by design, since master password is a fallback
+// gate scheduled for removal in Phase 3).
+let IS_MASTER_ADMIN = false;
+
 // User-side filter state
 let fFrom = "", fTo = "", fMode = "";
 

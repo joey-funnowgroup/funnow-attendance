@@ -192,8 +192,18 @@ async function renderAdmin() {
 }
 
 // ── Admin top-nav: back to portal ──
+//
+// If the admin got in via master password (no signed-in user), reset
+// IS_MASTER_ADMIN and route to #/login. If they're a signed-in admin,
+// route to #/home so they can clock in/out as a normal employee.
+//
 document.getElementById("ad-back").addEventListener("click", () => {
-  if (U) show("v-home"); else show("v-login");
+  if (U) {
+    goto("#/home");
+  } else {
+    IS_MASTER_ADMIN = false;
+    goto("#/login");
+  }
 });
 
 // ── Admin filters — pure in-memory render, no refetch ──
