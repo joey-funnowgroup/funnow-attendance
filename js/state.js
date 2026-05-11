@@ -6,16 +6,12 @@
 // reference them (classic scripts share the global lexical env).
 //
 
-let U = null;          // Current signed-in user { email, name, photo }
-let MODE = "Office";   // Currently selected work location
-let BUSY = false;      // True while a clock-in/out network call is in flight
-let records = [];      // All in-memory attendance records
-let adminEmails = [];  // Admins whitelist (lowercase emails)
-
-// Master-password admin session flag (in-memory only — does not persist
-// across page refresh, by design, since master password is a fallback
-// gate scheduled for removal in Phase 3).
-let IS_MASTER_ADMIN = false;
+let U = null;            // Current signed-in user { email, name, photo }
+let G_ID_TOKEN = null;   // Google ID token (JWT) for the current session — sent to the backend on every protected request
+let MODE = "Office";     // Currently selected work location
+let BUSY = false;        // True while a clock-in/out network call is in flight
+let records = [];        // All in-memory attendance records
+let adminEmails = [];    // Admins whitelist (lowercase emails)
 
 // User-side filter state
 let fFrom = "", fTo = "", fMode = "";

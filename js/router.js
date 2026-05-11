@@ -19,15 +19,18 @@
 // pushed onto the history stack.
 //
 
-const VIEWS = ["v-login", "v-home", "v-admin-login", "v-admin-dash"];
+const VIEWS = ["v-login", "v-home", "v-admin-dash"];
 
+// Phase 3: master-password gate is gone. Admin access is only via Google
+// Sign-In + the Admins whitelist. The legacy `#/admin` URL is kept as a
+// graceful redirect to `#/admin/records` (or `#/login` if signed out).
 const ROUTES = [
-  { hash: "#/login",         view: "v-login",       requiresAuth: false, requiresAdmin: false, adminTab: null       },
-  { hash: "#/home",          view: "v-home",        requiresAuth: true,  requiresAdmin: false, adminTab: null       },
-  { hash: "#/admin",         view: "v-admin-login", requiresAuth: false, requiresAdmin: false, adminTab: null       },
-  { hash: "#/admin/records", view: "v-admin-dash",  requiresAuth: false, requiresAdmin: true,  adminTab: "records"  },
-  { hash: "#/admin/inbox",   view: "v-admin-dash",  requiresAuth: false, requiresAdmin: true,  adminTab: "requests" },
-  { hash: "#/admin/roles",   view: "v-admin-dash",  requiresAuth: false, requiresAdmin: true,  adminTab: "roles"    },
+  { hash: "#/login",         view: "v-login",      requiresAuth: false, requiresAdmin: false, adminTab: null       },
+  { hash: "#/home",          view: "v-home",       requiresAuth: true,  requiresAdmin: false, adminTab: null       },
+  { hash: "#/admin",         redirectTo: "#/admin/records" },
+  { hash: "#/admin/records", view: "v-admin-dash", requiresAuth: true,  requiresAdmin: true,  adminTab: "records"  },
+  { hash: "#/admin/inbox",   view: "v-admin-dash", requiresAuth: true,  requiresAdmin: true,  adminTab: "requests" },
+  { hash: "#/admin/roles",   view: "v-admin-dash", requiresAuth: true,  requiresAdmin: true,  adminTab: "roles"    },
 ];
 
 const TAB_HASH = {
@@ -36,11 +39,10 @@ const TAB_HASH = {
   roles:    "#/admin/roles"
 };
 
-// True if the current user can access admin views — either signed in
-// with an email on the Admins whitelist, or in the master-password
-// session (which sets IS_MASTER_ADMIN in admin-login.js).
+// True if the current user can access admin views — signed in with an
+// email on the Admins whitelist. (Phase 3 removed the master-password
+// fallback entirely.)
 function isSignedInAdmin() {
-  if (typeof IS_MASTER_ADMIN !== "undefined" && IS_MASTER_ADMIN) return true;
   return !!(U && Array.isArray(adminEmails) && adminEmails.includes(String(U.email).toLowerCase()));
 }
 
@@ -78,6 +80,12 @@ async function handleRoute() {
     route = findRoute(hash);
   }
 
+  // Redirect routes (e.g. legacy #/admin → #/admin/records)
+  if (route.redirectTo) {
+    history.replaceState(null, "", route.redirectTo);
+    route = findRoute(route.redirectTo) || findRoute("#/login");
+  }
+
   // Auth gate — needs a signed-in user
   if (route.requiresAuth && !U) {
     history.replaceState(null, "", "#/login");
@@ -86,16 +94,10 @@ async function handleRoute() {
 
   // Admin gate — needs admin privileges
   if (route.requiresAdmin && !isSignedInAdmin()) {
-    if (U) {
-      // Signed in but not an admin — go home with a toast
-      if (typeof toast === "function") toast("Admin access required", "error");
-      history.replaceState(null, "", "#/home");
-      route = findRoute("#/home");
-    } else {
-      // Not signed in at all — go to admin login screen
-      history.replaceState(null, "", "#/admin");
-      route = findRoute("#/admin");
-    }
+    // U is guaranteed truthy here because requiresAdmin routes also have requiresAuth=true
+    if (typeof toast === "function") toast("Admin access required", "error");
+    history.replaceState(null, "", "#/home");
+    route = findRoute("#/home");
   }
 
   showView(route.view);
@@ -115,7 +117,7 @@ function showView(v) {
     if (el) el.style.display = "none";
   }
   const target = document.getElementById(v);
-  if (target) target.style.display = (v === "v-login" || v === "v-admin-login") ? "flex" : "block";
+  if (target) target.style.display = (v === "v-login") ? "flex" : "block";
 }
 
 // Apply admin tab UI without touching the URL — used internally
@@ -145,10 +147,9 @@ window.switchAdTab = function (tabId) {
 // edits, but new code should call goto() with an explicit hash.
 function show(v) {
   const m = {
-    "v-login":       "#/login",
-    "v-home":        "#/home",
-    "v-admin-login": "#/admin",
-    "v-admin-dash":  "#/admin/records"
+    "v-login":      "#/login",
+    "v-home":       "#/home",
+    "v-admin-dash": "#/admin/records"
   };
   goto(m[v] || "#/login");
 }

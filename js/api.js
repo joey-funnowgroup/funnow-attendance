@@ -7,14 +7,25 @@
 // Apps Script CORS preflight. Do NOT switch to application/json.
 //
 
+// Every protected write call includes the current Google ID token so the
+// backend can verify the caller's identity. The server uses the verified
+// email — never trust client-supplied identity fields.
 async function apiPost(payload) {
   try {
+    const enriched = { ...payload, idToken: G_ID_TOKEN };
     const res = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(enriched)
     });
-    return await res.json();
+    const data = await res.json();
+
+    // Server signalled an auth problem — kick the user back to sign-in
+    if (data && data.success === false && (data.code === "auth" || data.code === "domain" || data.code === "forbidden")) {
+      if (typeof handleAuthExpired === "function") handleAuthExpired(data.code);
+    }
+
+    return data;
   } catch (err) {
     console.error("API Error: Make sure your Google Sheet headers are exact matches to the script.", err);
     throw err;
