@@ -266,9 +266,8 @@ async function doClockOut() {
 document.getElementById("h-out").addEventListener("click", () => {
   U = null;
   records = [];
-  IS_MASTER_ADMIN = false;
+  G_ID_TOKEN = null;
   if (typeof clearSession === "function") clearSession();
-  document.getElementById("le").value = "";
   document.getElementById("h-admin-nav").style.display = "none";
   document.getElementById("h-inbox-nav").style.display = "none";
   goto("#/login");

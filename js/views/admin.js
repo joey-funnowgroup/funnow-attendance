@@ -17,15 +17,15 @@ let pendingRequests = []; // last fetched pending-requests snapshot
 
 // ── Approve / Reject edit requests ──
 //
-// Sends `decidedBy` (the admin's email if signed in, else "master_password_admin")
-// so the backend can write an audit trail on the Requests sheet.
+// Phase 3: `decidedBy` is no longer sent from the client. The server
+// uses the verified email from the Google ID token instead — we never
+// trust a client-supplied identity field for an audit trail.
 //
 window.handleReqAction = async function (reqId, actionType) {
   if (!confirm(`Are you sure you want to ${actionType === "approveEdit" ? "APPROVE" : "REJECT"} this request?`)) return;
   toast("Processing...", "warning");
-  const decidedBy = (U && U.email) ? U.email : "master_password_admin";
   try {
-    const res = await apiPost({ action: actionType, reqId: reqId, decidedBy: decidedBy });
+    const res = await apiPost({ action: actionType, reqId: reqId });
     if (res && res.success === false) {
       toast(res.error || "Approval failed", "error");
       return;
@@ -193,17 +193,11 @@ async function renderAdmin() {
 
 // ── Admin top-nav: back to portal ──
 //
-// If the admin got in via master password (no signed-in user), reset
-// IS_MASTER_ADMIN and route to #/login. If they're a signed-in admin,
-// route to #/home so they can clock in/out as a normal employee.
+// Admins are always signed in (master-password gate is gone in Phase 3),
+// so back-to-portal always routes to the employee home view.
 //
 document.getElementById("ad-back").addEventListener("click", () => {
-  if (U) {
-    goto("#/home");
-  } else {
-    IS_MASTER_ADMIN = false;
-    goto("#/login");
-  }
+  goto(U ? "#/home" : "#/login");
 });
 
 // ── Admin filters — pure in-memory render, no refetch ──

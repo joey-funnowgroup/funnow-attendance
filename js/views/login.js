@@ -1,20 +1,12 @@
 // ─────────────────────────────────────────────────────────────
-// views/login.js — Employee login view event handlers
+// views/login.js — Employee login view
 // ─────────────────────────────────────────────────────────────
+//
+// Phase 3: this view's only interactive element is Google Sign-In,
+// which is wired up by the GSI library directly (data-callback in
+// index.html points to window.handleGoogleLogin in auth.js).
+// The email-only "Continue" field and "Go to Admin Portal" button
+// were removed in Phase 3 — single sign-in flow for everyone.
+//
 
-document.getElementById("l-btn").addEventListener("click", () => {
-  const email = document.getElementById("le").value.trim();
-  const err   = document.getElementById("le-err2");
-  if (!email || !email.includes("@") || !email.includes(".")) {
-    err.textContent = "Please enter a valid email address";
-    return;
-  }
-  err.textContent = "";
-  loginUser(email, nameF(email), null);
-});
-
-document.getElementById("le").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("l-btn").click();
-});
-
-document.getElementById("l-admin-btn").addEventListener("click", () => show("v-admin-login"));
+// Intentionally empty — no event listeners to bind.
