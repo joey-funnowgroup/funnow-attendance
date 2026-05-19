@@ -164,7 +164,7 @@ function loginUser(email, name, photo, skipNav) {
     return;
   }
 
-  U = { email, name: name || nameF(email), photo: photo || null };
+  U = { email: String(email).toLowerCase(), name: name || nameF(email), photo: photo || null };
 
   document.getElementById("nav-nm").textContent  = U.name;
   document.getElementById("nav-av").textContent  = inits(U.name);

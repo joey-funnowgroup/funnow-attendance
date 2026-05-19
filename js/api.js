@@ -121,10 +121,24 @@ async function pushToSheet(rec) {
   if (!SHEETS_READY) { setSyncBadge("err"); return; }
   setSyncBadge("ing");
   try {
-    await apiPost({ action: "upsert", record: rec });
+    const data = await apiPost({ action: "upsert", record: rec });
+    if (data && data.success === false) {
+      // Server accepted the request but rejected it (validation, identity, lock, etc.)
+      // Surface the failure instead of letting the user think it synced.
+      setSyncBadge("err");
+      console.warn("pushToSheet rejected by server:", data);
+      if (typeof toast === "function") {
+        toast("Couldn't sync to the server — record saved locally. " + (data.error || ""), "warning");
+      }
+      return;
+    }
     setSyncBadge("ok");
   } catch (e) {
     setSyncBadge("err");
+    console.warn("pushToSheet network error:", e);
+    if (typeof toast === "function") {
+      toast("Network error — record saved locally, please retry.", "warning");
+    }
   }
 }
 
